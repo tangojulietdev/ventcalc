@@ -1,0 +1,2825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#07101f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VentCalc">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="description" content="Marine cargo hold ventilation dew point calculator and voyage log">
+<title>VentCalc — Marine Ventilation</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ══ DESIGN TOKENS ══ */
+:root{
+  /* Spacing — strict 8px grid */
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;--s8:32px;
+  /* Border radius */
+  --r:8px;--r2:12px;--r3:16px;--r4:20px;
+  /* Safe areas */
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+  /* Layout */
+  --nav-h:62px;--hdr-h:52px;
+
+  /* ── Dark palette ── */
+  --bg:#07101f;
+  --bg2:#0c1929;
+  --bg3:#101f33;
+  --bg4:#15263d;
+  --surface:rgba(255,255,255,.04);
+  --surface2:rgba(255,255,255,.07);
+  --surface3:rgba(255,255,255,.10);
+
+  /* Brand */
+  --accent:#00bfa6;
+  --accent2:#009e8a;
+  --accent-dim:rgba(0,191,166,.12);
+  --accent-glow:rgba(0,191,166,.22);
+
+  /* Semantic */
+  --success:#1ec95a;
+  --success-dim:rgba(30,201,90,.12);
+  --danger:#e03535;
+  --danger-dim:rgba(224,53,53,.12);
+  --warning:#d4880a;
+  --warning-dim:rgba(212,136,10,.12);
+  --info:#2d7ef0;
+  --info-dim:rgba(45,126,240,.10);
+
+  /* Text hierarchy */
+  --txt-primary:#d6e4f0;
+  --txt-secondary:#6b8aaa;
+  --txt-tertiary:#2e4a66;
+  --txt-disabled:#1e3352;
+
+  /* Borders */
+  --brd:rgba(255,255,255,.07);
+  --brd-strong:rgba(255,255,255,.12);
+  --brd-accent:rgba(0,191,166,.25);
+
+  /* Surfaces */
+  --card:var(--bg2);
+  --input:rgba(255,255,255,.055);
+  --nav-glass:rgba(7,16,31,.9);
+  --hdr-glass:rgba(7,16,31,.92);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.3);
+  --shadow-md:0 4px 16px rgba(0,0,0,.4);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.5);
+
+  /* Keep legacy names for compatibility */
+  --teal:var(--accent);--teal2:var(--accent2);
+  --teal-dim:var(--accent-dim);--teal-glow:var(--accent-glow);
+  --green:var(--success);--green-dim:var(--success-dim);
+  --red:var(--danger);--red-dim:var(--danger-dim);
+  --amber:var(--warning);--amber-dim:var(--warning-dim);
+  --blue:var(--info);--blue-dim:var(--info-dim);
+  --txt:var(--txt-primary);--txt2:var(--txt-secondary);--txt3:var(--txt-tertiary);
+  --brd2:var(--brd-strong);--brd3:rgba(255,255,255,.05);
+  --shadow:rgba(0,0,0,.4);
+  --nav-bg:var(--nav-glass);--hdr-bg:var(--hdr-glass);
+  --card-bg:var(--card);--input-bg:var(--input);
+  --bg-alt:var(--bg3);
+}
+
+/* ── Light palette ── */
+body.light{
+  --bg:#f2f5f9;--bg2:#ffffff;--bg3:#eaeff5;--bg4:#dce4ee;
+  --surface:rgba(0,0,0,.025);--surface2:rgba(0,0,0,.05);--surface3:rgba(0,0,0,.08);
+  --accent:#007a66;--accent2:#006655;
+  --accent-dim:rgba(0,122,102,.1);--accent-glow:rgba(0,122,102,.2);
+  --success:#0e8a3a;--success-dim:rgba(14,138,58,.1);
+  --danger:#c82020;--danger-dim:rgba(200,32,32,.1);
+  --warning:#a86200;--warning-dim:rgba(168,98,0,.1);
+  --info:#1a55c8;--info-dim:rgba(26,85,200,.08);
+  --txt-primary:#0d1f33;--txt-secondary:#3d5a78;--txt-tertiary:#8aaac8;--txt-disabled:#b8cfe0;
+  --brd:rgba(0,0,0,.09);--brd-strong:rgba(0,0,0,.15);--brd-accent:rgba(0,122,102,.22);
+  --card:#ffffff;--input:rgba(0,0,0,.04);
+  --nav-glass:rgba(242,245,249,.93);--hdr-glass:rgba(242,245,249,.96);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.08);
+  --shadow-md:0 4px 16px rgba(0,0,0,.1);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.14);
+  --bg-alt:var(--bg3);
+}
+
+/* ══ BASE ══ */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{height:100%;overflow:hidden}
+body{
+  height:100%;overflow:hidden;overscroll-behavior:none;
+  font-family:"Inter",system-ui,sans-serif;
+  background:var(--bg);color:var(--txt-primary);
+  font-size:14px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  transition:background .2s,color .2s;
+}
+
+/* ══ APP SHELL ══ */
+#appShell{position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden}
+
+/* ══ HEADER ══ */
+.hdr{
+  flex-shrink:0;
+  height:calc(var(--hdr-h) + var(--safe-t));
+  padding:var(--safe-t) var(--s4) 0;
+  background:var(--hdr-glass);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--brd);
+  display:flex;align-items:center;gap:var(--s3);
+  z-index:100;
+}
+.hdr-back{
+  display:none;width:34px;height:34px;border-radius:var(--r);
+  background:var(--surface2);border:1px solid var(--brd-strong);
+  align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;color:var(--txt-secondary);
+  transition:background .15s,transform .15s;
+}
+.hdr-back.show{display:flex}
+.hdr-back:active{transform:scale(.88);background:var(--accent-dim)}
+.logo-mark{
+  width:32px;height:32px;border-radius:9px;flex-shrink:0;
+  background:linear-gradient(145deg,var(--accent) 0%,#0077cc 100%);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px var(--accent-glow);
+}
+.hdr-texts{flex:1;min-width:0}
+.hdr-title{
+  font-weight:700;font-size:14px;letter-spacing:-.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:var(--txt-primary);
+}
+.hdr-sub{font-size:10px;color:var(--txt-secondary);letter-spacing:.02em;margin-top:1px}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:var(--s2);flex-shrink:0}
+.icon-btn{
+  width:34px;height:34px;border-radius:var(--r);
+  background:var(--surface2);border:1px solid var(--brd);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--txt-secondary);
+  transition:background .15s,color .15s,transform .15s;
+}
+.icon-btn:active{transform:scale(.88)}
+.icon-btn:hover{background:var(--surface3);color:var(--txt-primary)}
+.install-btn{
+  display:none;height:32px;padding:0 var(--s3);border-radius:var(--r);
+  background:var(--accent-dim);border:1px solid var(--brd-accent);
+  color:var(--accent);font-size:11px;font-weight:600;
+  cursor:pointer;font-family:inherit;align-items:center;gap:5px;
+}
+
+/* ══ SWIPE / TABS ══ */
+#swipeWrap{flex:1;overflow:hidden;position:relative;min-height:0}
+.tab-strip{width:100%;height:100%;position:relative}
+.tab-panel{
+  display:none;width:100%;height:100%;
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  position:absolute;inset:0;
+}
+.tab-panel.active{display:block}
+.tab-panel::-webkit-scrollbar{width:2px}
+.tab-panel::-webkit-scrollbar-thumb{background:var(--brd-strong);border-radius:2px}
+.page{max-width:760px;margin:0 auto;padding:var(--s4) var(--s4) var(--s8)}
+
+/* ══ SUB-PAGES ══ */
+.sub-page{
+  position:fixed;inset:0;z-index:200;background:var(--bg);
+  transform:translateX(100%);
+  transition:transform .26s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.sub-page.open{transform:translateX(0)}
+.sub-hdr{
+  flex-shrink:0;height:calc(52px + var(--safe-t));
+  padding:var(--safe-t) var(--s4) 0;
+  background:var(--hdr-glass);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--brd);
+  display:flex;align-items:center;gap:var(--s3);
+}
+.sub-back{
+  width:34px;height:34px;border-radius:var(--r);
+  background:var(--surface2);border:1px solid var(--brd-strong);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--txt-secondary);flex-shrink:0;
+  transition:background .15s,transform .15s;
+}
+.sub-back:active{transform:scale(.88);background:var(--accent-dim)}
+.sub-title{font-weight:700;font-size:14px;flex:1;color:var(--txt-primary)}
+.back-btn-text{
+  display:flex;align-items:center;gap:5px;
+  height:32px;padding:0 var(--s3);border-radius:var(--r);
+  background:var(--surface2);border:1px solid var(--brd);
+  color:var(--txt-secondary);font-family:inherit;font-size:12px;font-weight:500;
+  cursor:pointer;white-space:nowrap;
+  transition:background .15s,color .15s;
+}
+.back-btn-text:active{background:var(--accent-dim);color:var(--accent)}
+.sub-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sub-body::-webkit-scrollbar{width:2px}
+.sub-body::-webkit-scrollbar-thumb{background:var(--brd-strong);border-radius:2px}
+
+/* ══ BOTTOM NAV ══ */
+.bnav{
+  flex-shrink:0;
+  padding:var(--s2) var(--s3) calc(var(--s2) + var(--safe-b));
+}
+.bnav-inner{
+  max-width:380px;margin:0 auto;
+  background:var(--nav-glass);
+  backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
+  border:1px solid var(--brd-strong);
+  border-radius:var(--r4);
+  display:flex;align-items:center;
+  padding:3px;
+  box-shadow:var(--shadow-md);
+}
+.ntab{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:7px 4px;border-radius:var(--r3);
+  cursor:pointer;border:none;background:transparent;
+  transition:background .18s;min-width:0;
+}
+.ntab svg{
+  color:var(--txt-tertiary);
+  transition:color .18s,transform .18s;
+}
+.ntab .nl{
+  font-size:9px;font-weight:600;
+  color:var(--txt-tertiary);
+  letter-spacing:.02em;
+  transition:color .18s;
+  white-space:nowrap;
+}
+.ntab.on{background:var(--accent-dim)}
+.ntab.on svg{color:var(--accent);transform:scale(1.08)}
+.ntab.on .nl{color:var(--accent)}
+.ntab:active svg{transform:scale(.85)}
+
+/* ══ ONBOARDING ══ */
+#onboarding{
+  position:fixed;inset:0;z-index:999;
+  background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:var(--s8) var(--s6);
+}
+.ob-dots{display:flex;gap:6px;margin-bottom:var(--s8)}
+.ob-dot{width:6px;height:6px;border-radius:50%;background:var(--brd-strong);transition:all .25s}
+.ob-dot.on{background:var(--accent);width:18px;border-radius:3px}
+.ob-slide{display:none;text-align:center;max-width:320px}
+.ob-slide.on{display:block}
+.ob-icon{
+  width:72px;height:72px;border-radius:20px;
+  background:linear-gradient(145deg,var(--accent),#0077cc);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto var(--s6);
+  box-shadow:0 8px 24px var(--accent-glow);
+}
+.ob-title{font-size:1.5rem;font-weight:800;margin-bottom:var(--s3);letter-spacing:-.02em;line-height:1.2}
+.ob-title em{font-style:normal;color:var(--accent)}
+.ob-text{color:var(--txt-secondary);font-size:14px;line-height:1.75;margin-bottom:var(--s8)}
+.ob-btns{display:flex;gap:var(--s3);width:100%;max-width:280px;margin:0 auto}
+
+/* ══ TYPOGRAPHY UTILS ══ */
+.eyebrow{
+  font-size:10px;text-transform:uppercase;letter-spacing:.1em;
+  font-weight:600;color:var(--txt-secondary);
+  margin-bottom:var(--s2);display:block;
+}
+.section-title{font-size:1rem;font-weight:700;letter-spacing:-.01em;margin-bottom:var(--s2)}
+.mono{font-family:"JetBrains Mono",monospace}
+.sh{margin:var(--s6) 0 var(--s4)}
+.sh h2{font-size:1rem;font-weight:700;margin-bottom:3px;letter-spacing:-.01em}
+.sh p{color:var(--txt-secondary);font-size:12px}
+.div{border:none;border-top:1px solid var(--brd);margin:var(--s6) 0}
+
+/* ══ CARDS ══ */
+.card{
+  background:var(--card);border:1px solid var(--brd);
+  border-radius:var(--r2);padding:var(--s4);
+}
+.card-inset{
+  background:var(--bg3);border:1px solid var(--brd);
+  border-radius:var(--r);padding:var(--s3) var(--s4);
+}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s3)}
+.grid4{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3)}
+@media(max-width:480px){
+  .grid2{grid-template-columns:1fr}
+  .grid3{grid-template-columns:1fr 1fr}
+}
+
+/* ══ TILES (More tab) ══ */
+.tile-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3)}
+.tile{
+  background:var(--card);border:1px solid var(--brd);
+  border-radius:var(--r2);padding:var(--s4);
+  cursor:pointer;transition:border-color .15s,background .15s,transform .1s;
+  display:flex;flex-direction:column;gap:var(--s2);
+}
+.tile:active{transform:scale(.97);border-color:var(--brd-accent)}
+.tile:hover{border-color:var(--brd-strong)}
+.t-icon-wrap{
+  width:36px;height:36px;border-radius:var(--r);
+  background:var(--accent-dim);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--accent);margin-bottom:var(--s1);
+}
+.t-title{font-weight:600;font-size:13px;color:var(--txt-primary);line-height:1.3}
+.t-sub{font-size:11px;color:var(--txt-secondary);line-height:1.4}
+
+/* ══ STATUS PILLS ══ */
+.pill{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 10px;border-radius:100px;
+  font-size:11px;font-weight:600;letter-spacing:.01em;white-space:nowrap;
+}
+.pill-accent{background:var(--accent-dim);color:var(--accent);border:1px solid var(--brd-accent)}
+.pill-success{background:var(--success-dim);color:var(--success);border:1px solid rgba(30,201,90,.2)}
+.pill-danger{background:var(--danger-dim);color:var(--danger);border:1px solid rgba(224,53,53,.2)}
+.pill-warning{background:var(--warning-dim);color:var(--warning);border:1px solid rgba(212,136,10,.2)}
+.pill-info{background:var(--info-dim);color:var(--info);border:1px solid rgba(45,126,240,.2)}
+/* legacy */
+.pill-teal{background:var(--accent-dim);color:var(--accent);border:1px solid var(--brd-accent)}
+.pill-amber{background:var(--warning-dim);color:var(--warning);border:1px solid rgba(212,136,10,.22)}
+.pill-red{background:var(--danger-dim);color:var(--danger);border:1px solid rgba(224,53,53,.22)}
+.pill-green{background:var(--success-dim);color:var(--success);border:1px solid rgba(30,201,90,.22)}
+.pill-blue{background:var(--info-dim);color:var(--info);border:1px solid rgba(45,126,240,.22)}
+
+/* ══ BUTTONS ══ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:0 var(--s4);height:40px;
+  border-radius:var(--r);border:none;cursor:pointer;
+  font-family:inherit;font-size:13px;font-weight:600;
+  transition:background .15s,opacity .15s,transform .1s;
+  white-space:nowrap;
+}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:active{background:var(--accent2)}
+.btn-secondary{background:var(--surface2);color:var(--txt-secondary);border:1px solid var(--brd)}
+.btn-secondary:hover{background:var(--surface3);color:var(--txt-primary)}
+.btn-ghost{background:transparent;color:var(--txt-secondary);border:1px solid var(--brd)}
+.btn-ghost:hover{background:var(--surface2)}
+.btn-danger{background:var(--danger-dim);color:var(--danger);border:1px solid rgba(224,53,53,.2)}
+.btn-danger:hover{background:rgba(224,53,53,.18)}
+.btn-sm{height:32px;padding:0 var(--s3);font-size:12px}
+.btn-full{width:100%}
+
+/* ══ FORMS ══ */
+.fld{display:flex;flex-direction:column;gap:var(--s2)}
+.fld label{
+  font-size:11px;font-weight:600;
+  color:var(--txt-secondary);
+  text-transform:uppercase;letter-spacing:.06em;
+}
+.fld input,.fld select{
+  background:var(--input);border:1px solid var(--brd);
+  border-radius:var(--r);color:var(--txt-primary);
+  font-family:inherit;font-size:13px;
+  padding:0 var(--s3);height:44px;
+  transition:border-color .15s,background .15s;
+  width:100%;appearance:none;-webkit-appearance:none;
+}
+.fld input:focus,.fld select:focus{
+  outline:none;border-color:var(--accent);
+  background:var(--accent-dim);
+}
+.fld input::placeholder{color:var(--txt-tertiary);font-size:13px}
+.fld input[type=date],.fld input[type=time]{color-scheme:dark}
+body.light .fld input[type=date],body.light .fld input[type=time]{color-scheme:light}
+.fld select option{background:var(--bg3);color:var(--txt-primary)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3)}
+
+/* ══ SECTION BLOCKS ══ */
+.blk{
+  background:var(--bg3);border:1px solid var(--brd);
+  border-radius:var(--r2);padding:var(--s4);margin-bottom:var(--s4);
+}
+.out-blk{
+  background:var(--accent-dim);border:1px solid var(--brd-accent);
+  border-radius:var(--r2);padding:var(--s4);margin-bottom:var(--s4);
+}
+.blk-lbl{
+  font-size:10px;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--accent);font-weight:700;
+  margin-bottom:var(--s4);
+  display:flex;align-items:center;gap:var(--s2);
+}
+.blk-lbl::before{
+  content:"";width:3px;height:14px;
+  background:var(--accent);border-radius:2px;flex-shrink:0;
+}
+
+/* ══ RESULT BOXES ══ */
+.res-box{
+  background:var(--surface);border:1px solid var(--brd);
+  border-radius:var(--r);padding:var(--s3) var(--s3);
+  display:flex;align-items:center;justify-content:space-between;
+  height:52px;
+}
+.res-box .rl{font-size:11px;color:var(--txt-secondary);font-weight:500}
+.res-box .rv{
+  font-family:"JetBrains Mono",monospace;
+  font-size:1.1rem;font-weight:700;color:var(--accent);
+}
+
+/* ══ SUMMARY BOXES ══ */
+.sum-row{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s2);margin-bottom:var(--s4)}
+.sum-box{
+  background:var(--bg3);border:1px solid var(--brd);
+  border-radius:var(--r);padding:var(--s3) var(--s2);text-align:center;
+}
+.sum-box .sv{font-size:1.4rem;font-weight:800;line-height:1;letter-spacing:-.02em}
+.sum-box .sl{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--txt-secondary);margin-top:3px}
+.sum-box.g .sv{color:var(--success)}
+.sum-box.r .sv{color:var(--danger)}
+.sum-box.a .sv{color:var(--warning)}
+
+/* ══ HOLDS TABLE ══ */
+.htbl-wrap{
+  overflow-x:auto;border-radius:var(--r2);
+  border:1px solid var(--brd);
+  -webkit-overflow-scrolling:touch;margin-bottom:var(--s4);
+}
+table.htbl{width:100%;border-collapse:collapse;font-size:12px;min-width:560px}
+.htbl th{
+  padding:10px var(--s3);background:var(--bg3);
+  text-align:left;font-size:9px;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--txt-secondary);font-weight:600;
+  border-bottom:1px solid var(--brd);white-space:nowrap;
+}
+.htbl td{
+  padding:9px var(--s3);border-bottom:1px solid var(--brd3);
+  vertical-align:middle;color:var(--txt-primary);
+}
+.htbl tr:last-child td{border-bottom:none}
+.htbl tr:nth-child(even) td{background:var(--surface)}
+.htbl input{
+  width:62px;padding:5px var(--s2);
+  background:var(--input);border:1px solid var(--brd);
+  border-radius:6px;color:var(--txt-primary);
+  font-family:"JetBrains Mono",monospace;font-size:12px;
+  text-align:center;transition:border-color .15s;min-height:34px;
+}
+.htbl input:focus{outline:none;border-color:var(--accent);background:var(--accent-dim)}
+.htbl .ci{
+  width:92px;font-family:inherit;font-size:12px;
+  text-align:left;padding:5px var(--s2);
+}
+
+/* Decision pills */
+.vpill{
+  display:inline-flex;align-items:center;gap:3px;
+  padding:3px 9px;border-radius:5px;
+  font-size:10px;font-weight:700;white-space:nowrap;letter-spacing:.01em;
+}
+.vpill.v{background:var(--success-dim);color:var(--success);border:1px solid rgba(30,201,90,.22)}
+.vpill.n{background:var(--danger-dim);color:var(--danger);border:1px solid rgba(224,53,53,.22)}
+.vpill.c{background:var(--warning-dim);color:var(--warning);border:1px solid rgba(212,136,10,.22)}
+.vpill.e{background:var(--surface);color:var(--txt-tertiary);border:1px solid var(--brd)}
+
+/* ══ RISK BAR ══ */
+.risk-bar{
+  display:flex;gap:var(--s3);padding:var(--s3) var(--s4);
+  background:var(--bg3);border:1px solid var(--brd);
+  border-radius:var(--r2);margin-bottom:var(--s4);
+  align-items:center;cursor:pointer;
+  transition:border-color .15s,background .15s;
+}
+.risk-bar:active{background:var(--accent-dim);border-color:var(--brd-accent)}
+.risk-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.risk-dot.low{background:var(--success);box-shadow:0 0 6px var(--success)}
+.risk-dot.mod{background:var(--warning);box-shadow:0 0 6px var(--warning)}
+.risk-dot.high{background:var(--danger);box-shadow:0 0 6px var(--danger)}
+.risk-dot.crit{background:#ff2020;box-shadow:0 0 10px #ff2020;animation:blink 1s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.risk-txt{flex:1;min-width:0}
+.risk-txt .rl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--txt-secondary)}
+.risk-txt .rv{font-size:13px;font-weight:700;color:var(--txt-primary);margin-top:2px}
+.risk-arr{color:var(--txt-tertiary);flex-shrink:0}
+
+/* ══ DP LEGEND ══ */
+.dp-legend{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r2);padding:var(--s4);margin-bottom:var(--s4)}
+.dp-legend h4{font-size:13px;font-weight:700;margin-bottom:var(--s3);color:var(--txt-primary)}
+.dp-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s2);margin-bottom:var(--s3)}
+@media(max-width:480px){.dp-cards{grid-template-columns:1fr;gap:var(--s2)}}
+.dp-card{border-radius:var(--r);padding:var(--s3) var(--s3)}
+.dp-card.pos{background:var(--success-dim);border:1px solid rgba(30,201,90,.2)}
+.dp-card.neg{background:var(--danger-dim);border:1px solid rgba(224,53,53,.2)}
+.dp-card.zer{background:var(--warning-dim);border:1px solid rgba(212,136,10,.2)}
+.dc-val{font-family:"JetBrains Mono",monospace;font-size:1.1rem;font-weight:700;margin-bottom:2px}
+.dp-card.pos .dc-val{color:var(--success)}
+.dp-card.neg .dc-val{color:var(--danger)}
+.dp-card.zer .dc-val{color:var(--warning)}
+.dc-dec{font-size:11px;font-weight:700;margin-bottom:3px}
+.dp-card.pos .dc-dec{color:var(--success)}
+.dp-card.neg .dc-dec{color:var(--danger)}
+.dp-card.zer .dc-dec{color:var(--warning)}
+.dc-why{font-size:10px;color:var(--txt-secondary);line-height:1.5}
+.dp-formula{
+  background:var(--surface);border:1px solid var(--brd);
+  border-radius:var(--r);padding:var(--s2) var(--s3);
+  font-family:"JetBrains Mono",monospace;font-size:12px;
+  color:var(--accent);margin-bottom:var(--s3);
+  letter-spacing:.01em;
+}
+
+/* ══ LOG CTA ══ */
+.log-cta{
+  background:var(--accent-dim);border:1px solid var(--brd-accent);
+  border-radius:var(--r2);padding:var(--s4);margin-bottom:var(--s4);
+}
+.log-cta h4{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:3px}
+.log-cta p{font-size:12px;color:var(--txt-secondary);margin-bottom:var(--s3);line-height:1.5}
+.log-confirm{display:none;font-size:12px;color:var(--success);font-weight:600;margin-bottom:var(--s2)}
+
+/* ══ VOYAGE SELECTOR ══ */
+.voy-sel{
+  background:var(--bg3);border:1px solid var(--brd);
+  border-radius:var(--r2);padding:var(--s3) var(--s4);
+  margin-bottom:var(--s4);display:flex;align-items:center;gap:var(--s3);
+}
+.voy-sel .vs-label{
+  font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--accent);font-weight:700;flex-shrink:0;
+}
+.voy-sel select{
+  flex:1;background:transparent;border:none;
+  color:var(--txt-primary);font-family:inherit;font-size:13px;font-weight:600;
+  cursor:pointer;padding:0;appearance:none;-webkit-appearance:none;min-height:0;
+}
+.voy-sel select:focus{outline:none}
+
+/* ══ LOG ENTRIES ══ */
+.log-entry{
+  background:var(--card);border:1px solid var(--brd);
+  border-radius:var(--r2);margin-bottom:var(--s4);overflow:hidden;
+}
+.le-hdr{
+  background:var(--bg3);padding:var(--s3) var(--s4);
+  display:flex;align-items:center;justify-content:space-between;
+  gap:var(--s2);flex-wrap:wrap;border-bottom:1px solid var(--brd);
+}
+.le-meta{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap}
+.le-num{
+  background:var(--accent-dim);color:var(--accent);
+  border-radius:5px;padding:2px 8px;
+  font-size:10px;font-weight:700;letter-spacing:.04em;
+}
+.le-ts{font-size:11px;font-weight:600;color:var(--txt-primary)}
+.le-info{font-size:10px;color:var(--txt-secondary);width:100%;margin-top:2px}
+.le-outside{
+  display:flex;gap:var(--s4);flex-wrap:wrap;align-items:center;
+  padding:var(--s2) var(--s4);border-bottom:1px solid var(--brd);
+  background:var(--surface);font-size:11px;
+}
+.le-weather{
+  display:flex;gap:var(--s2);flex-wrap:wrap;
+  padding:var(--s2) var(--s4);border-bottom:1px solid var(--brd);
+  font-size:10px;color:var(--txt-secondary);background:var(--surface);
+}
+.le-banner{
+  padding:var(--s1) var(--s4);border-bottom:1px solid var(--brd);
+  font-size:11px;font-weight:700;
+}
+.le-tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.le-t{width:100%;border-collapse:collapse;font-size:10px;min-width:500px}
+.le-t th{
+  padding:6px var(--s3);background:var(--bg3);
+  font-size:9px;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--txt-secondary);font-weight:600;
+  text-align:left;border-bottom:1px solid var(--brd);white-space:nowrap;
+}
+.le-t td{padding:6px var(--s3);border-bottom:1px solid var(--brd3);vertical-align:middle}
+.le-t tr:last-child td{border-bottom:none}
+.stat-chip{
+  display:inline-flex;align-items:center;gap:3px;
+  padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;
+}
+
+/* ══ EMPTY STATE ══ */
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;
+  padding:var(--s8) var(--s4);text-align:center;
+  background:var(--card);border:1px dashed var(--brd-strong);
+  border-radius:var(--r2);
+}
+.empty-state .es-icon{
+  width:48px;height:48px;border-radius:var(--r2);
+  background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--txt-tertiary);margin-bottom:var(--s4);
+}
+.empty-state .es-title{font-size:14px;font-weight:600;color:var(--txt-primary);margin-bottom:var(--s2)}
+.empty-state .es-sub{font-size:12px;color:var(--txt-secondary);line-height:1.6;max-width:260px}
+
+/* ══ VOYAGE LIST ══ */
+.voy-item{
+  background:var(--card);border:1px solid var(--brd);
+  border-radius:var(--r2);padding:var(--s3) var(--s4);
+  margin-bottom:var(--s2);display:flex;align-items:center;
+  gap:var(--s3);cursor:pointer;
+  transition:border-color .15s,background .15s,transform .1s;
+}
+.voy-item:active{transform:scale(.99)}
+.voy-item.active{border-color:var(--brd-accent);background:var(--accent-dim)}
+.voy-item .vi-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+  background:var(--brd-strong);transition:background .15s,box-shadow .15s;
+}
+.voy-item.active .vi-dot{background:var(--accent);box-shadow:0 0 6px var(--accent-glow)}
+.voy-item .vi-body{flex:1;min-width:0}
+.voy-item .vi-name{font-weight:600;font-size:13px;margin-bottom:2px;color:var(--txt-primary)}
+.voy-item .vi-meta{font-size:11px;color:var(--txt-secondary)}
+.voy-item .vi-del{flex-shrink:0;color:var(--txt-tertiary);cursor:pointer;padding:var(--s2);display:flex;align-items:center;border-radius:var(--r);transition:color .15s,background .15s}
+.voy-item .vi-del:active{color:var(--danger);background:var(--danger-dim)}
+
+/* ══ CHART ══ */
+.chart-wrap{background:var(--card);border:1px solid var(--brd);border-radius:var(--r2);padding:var(--s4);margin-bottom:var(--s4)}
+.chart-ctrl{display:flex;gap:var(--s2);flex-wrap:wrap;align-items:center;margin-bottom:var(--s3)}
+.chart-ctrl label{font-size:11px;color:var(--txt-secondary);font-weight:500}
+.chart-ctrl select{
+  background:var(--bg3);border:1px solid var(--brd);
+  border-radius:var(--r);color:var(--txt-primary);
+  font-family:inherit;font-size:12px;
+  height:32px;padding:0 var(--s3);
+  appearance:none;-webkit-appearance:none;cursor:pointer;
+}
+canvas#trendChart{width:100%!important;border-radius:var(--r)}
+
+/* ══ QUIZ ══ */
+.quiz-wrap{max-width:500px;margin:0 auto}
+.quiz-progress{background:var(--bg3);border-radius:100px;height:3px;margin-bottom:var(--s6);overflow:hidden}
+.quiz-bar{height:100%;background:var(--accent);border-radius:100px;transition:width .35s ease}
+.quiz-q{background:var(--card);border:1px solid var(--brd);border-radius:var(--r2);padding:var(--s4);margin-bottom:var(--s4)}
+.quiz-q .qn{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:700;margin-bottom:var(--s2)}
+.quiz-q .qt{font-size:14px;font-weight:600;line-height:1.55;margin-bottom:var(--s4);color:var(--txt-primary)}
+.quiz-opt{
+  display:block;width:100%;padding:var(--s3) var(--s4);
+  background:var(--surface);border:1px solid var(--brd);
+  border-radius:var(--r);color:var(--txt-primary);
+  font-family:inherit;font-size:13px;text-align:left;
+  cursor:pointer;margin-bottom:var(--s2);
+  transition:border-color .15s,background .15s;
+}
+.quiz-opt:last-of-type{margin-bottom:0}
+.quiz-opt:active{background:var(--surface2)}
+.quiz-opt.correct{background:var(--success-dim);border-color:rgba(30,201,90,.3);color:var(--success)}
+.quiz-opt.wrong{background:var(--danger-dim);border-color:rgba(224,53,53,.3);color:var(--danger)}
+.quiz-explain{
+  background:var(--bg3);border:1px solid var(--brd);
+  border-radius:var(--r);padding:var(--s3) var(--s4);
+  font-size:12px;color:var(--txt-secondary);line-height:1.7;
+  margin-top:var(--s3);display:none;
+}
+.quiz-score{text-align:center;padding:var(--s8) var(--s4)}
+.quiz-score .qs-num{font-size:3.5rem;font-weight:800;letter-spacing:-.04em;margin-bottom:var(--s2)}
+.quiz-score .qs-lbl{font-size:14px;color:var(--txt-secondary);margin-bottom:var(--s6)}
+
+/* ══ DEW POINT TABLE ══ */
+.dp-tbl-wrap{
+  overflow:auto;-webkit-overflow-scrolling:touch;
+  border-radius:var(--r2);border:1px solid var(--brd);
+}
+table.dp-tbl{border-collapse:collapse;font-size:11px;min-width:600px}
+.dp-tbl th{
+  padding:6px var(--s2);background:var(--bg3);text-align:center;
+  font-size:9px;color:var(--txt-secondary);font-weight:600;
+  border:1px solid var(--brd3);white-space:nowrap;
+  position:sticky;top:0;z-index:1;
+}
+.dp-tbl td{
+  padding:5px var(--s2);text-align:center;
+  border:1px solid var(--brd3);
+  font-family:"JetBrains Mono",monospace;font-size:10px;
+}
+.dp-tbl .dry-col{
+  background:var(--bg3);font-weight:700;color:var(--accent);
+  position:sticky;left:0;z-index:2;border-right:1px solid var(--brd-strong);
+}
+.dp-tbl tr:hover td{background:var(--surface2)}
+.dp-hi{background:rgba(30,201,90,.1);color:var(--success)}
+.dp-mid{background:rgba(212,136,10,.08);color:var(--warning)}
+.dp-lo{background:rgba(224,53,53,.09);color:var(--danger)}
+
+/* ══ CARGO REF ══ */
+.cargo-card{
+  background:var(--card);border:1px solid var(--brd);
+  border-radius:var(--r2);padding:var(--s4);margin-bottom:var(--s3);
+}
+.cargo-card .cc-hdr{display:flex;align-items:center;gap:var(--s3);margin-bottom:var(--s4)}
+.cargo-card .cc-icon{
+  width:40px;height:40px;border-radius:var(--r);
+  background:var(--accent-dim);display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;color:var(--accent);
+}
+.cargo-card .cc-name{font-weight:700;font-size:14px;color:var(--txt-primary)}
+.cargo-card .cc-rule{font-size:11px;font-weight:600;color:var(--accent);margin-top:2px}
+.cargo-card .cc-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--s1) var(--s4);font-size:12px;margin-bottom:var(--s3)}
+.cargo-card .cc-key{color:var(--txt-secondary)}
+.cargo-card .cc-val{font-weight:600;color:var(--txt-primary)}
+
+/* ══ STEPS ══ */
+.steps{list-style:none}
+.steps li{display:flex;gap:var(--s3);margin-bottom:var(--s3);font-size:13px;line-height:1.6;color:var(--txt-secondary)}
+.steps .sn{
+  flex-shrink:0;width:22px;height:22px;border-radius:50%;
+  background:var(--accent-dim);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;margin-top:3px;
+}
+
+/* ══ RULE BOX ══ */
+.rbox{
+  border-left:2px solid var(--accent);
+  padding:var(--s3) var(--s4);
+  background:var(--accent-dim);border-radius:0 var(--r) var(--r) 0;
+  margin:var(--s3) 0;
+}
+.rbox p{color:var(--accent);font-weight:600;font-size:13px;line-height:1.6}
+.rbox.warn{border-color:var(--warning);background:var(--warning-dim)}.rbox.warn p{color:var(--warning)}
+.rbox.danger{border-color:var(--danger);background:var(--danger-dim)}.rbox.danger p{color:var(--danger)}
+
+/* ══ EXPORT MODAL ══ */
+.modal-bg{
+  display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  align-items:flex-end;justify-content:center;
+}
+@media(min-width:600px){.modal-bg{align-items:center}}
+.modal-box{
+  background:var(--bg2);border:1px solid var(--brd-strong);
+  border-radius:var(--r4) var(--r4) 0 0;
+  padding:var(--s6);width:100%;max-width:460px;
+  box-shadow:var(--shadow-lg);
+}
+@media(min-width:600px){.modal-box{border-radius:var(--r4)}}
+.modal-handle{width:32px;height:4px;background:var(--brd-strong);border-radius:2px;margin:0 auto var(--s4)}
+@media(min-width:600px){.modal-handle{display:none}}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s4)}
+.modal-close{
+  width:30px;height:30px;border-radius:var(--r);
+  background:var(--surface2);border:1px solid var(--brd);
+  color:var(--txt-secondary);cursor:pointer;
+  font-size:14px;display:flex;align-items:center;justify-content:center;
+  transition:background .15s;
+}
+.modal-close:hover{background:var(--surface3)}
+.exp-btn{
+  display:flex;align-items:center;gap:var(--s3);
+  padding:var(--s3) var(--s3);border-radius:var(--r2);
+  cursor:pointer;text-align:left;
+  border:1px solid;margin-bottom:var(--s2);
+  background:transparent;width:100%;
+  transition:background .15s,transform .1s;
+}
+.exp-btn:active{transform:scale(.99)}
+.exp-btn .eb-icon{
+  width:36px;height:36px;border-radius:var(--r);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.exp-btn .eb-title{font-weight:600;font-size:13px;color:var(--txt-primary);margin-bottom:1px}
+.exp-btn .eb-sub{font-size:11px;color:var(--txt-secondary);line-height:1.4}
+.exp-btn .eb-ext{
+  margin-left:auto;font-size:10px;font-weight:700;
+  flex-shrink:0;font-family:"JetBrains Mono",monospace;
+  padding:2px 6px;border-radius:4px;background:var(--surface2);
+}
+.exp-btn.pdf{border-color:rgba(224,53,53,.25);background:rgba(224,53,53,.05)}
+.exp-btn.pdf:active{background:rgba(224,53,53,.1)}
+.exp-btn.pdf .eb-icon{background:rgba(224,53,53,.12)}
+.exp-btn.pdf .eb-ext{color:var(--danger)}
+.exp-btn.xlsx{border-color:rgba(30,201,90,.2);background:rgba(30,201,90,.04)}
+.exp-btn.xlsx:active{background:rgba(30,201,90,.09)}
+.exp-btn.xlsx .eb-icon{background:rgba(30,201,90,.1)}
+.exp-btn.xlsx .eb-ext{color:var(--success)}
+.exp-btn.txt{border-color:var(--brd);background:var(--surface)}
+.exp-btn.txt:active{background:var(--surface2)}
+.exp-btn.txt .eb-icon{background:var(--surface2)}
+.exp-btn.txt .eb-ext{color:var(--txt-secondary)}
+.exp-status{display:none;padding:var(--s3) var(--s4);border-radius:var(--r);font-size:13px;font-weight:600;text-align:center;margin-top:var(--s2)}
+
+/* ══ TOAST ══ */
+.toast{
+  position:fixed;
+  bottom:calc(var(--nav-h) + 10px + var(--safe-b));
+  left:50%;transform:translateX(-50%) translateY(12px);
+  background:var(--bg2);border:1px solid var(--brd-strong);
+  border-radius:var(--r2);padding:var(--s2) var(--s4);
+  font-size:12px;font-weight:600;color:var(--success);
+  white-space:nowrap;z-index:400;opacity:0;
+  transition:opacity .25s,transform .25s;
+  pointer-events:none;backdrop-filter:blur(16px);
+  box-shadow:var(--shadow-md);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ══ NEW VOYAGE MODAL ══ */
+#newVoyModal .modal-box{max-width:380px}
+
+/* ══ SETTINGS ══ */
+.settings-section{
+  background:var(--card);border:1px solid var(--brd);
+  border-radius:var(--r2);overflow:hidden;margin-bottom:var(--s4);
+}
+.settings-section-hdr{
+  background:var(--bg3);padding:var(--s3) var(--s4);
+  border-bottom:1px solid var(--brd);
+  font-weight:600;font-size:12px;
+  display:flex;align-items:center;gap:var(--s2);
+  color:var(--txt-secondary);text-transform:uppercase;letter-spacing:.06em;
+}
+.settings-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:var(--s3) var(--s4);border-bottom:1px solid var(--brd3);font-size:13px;
+}
+.settings-row:last-child{border-bottom:none}
+.settings-row .sr-lbl{font-weight:500;color:var(--txt-primary)}
+.settings-row .sr-sub{font-size:11px;color:var(--txt-secondary);margin-top:1px}
+</style>
+</head>
+<body>
+<div id="appShell">
+
+<!-- HEADER -->
+<header class="hdr">
+  <button class="hdr-back" id="hdrBack" onclick="closeSub()" title="Back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+  <div class="logo-mark"><img src="icons/icon-72.png" width="32" height="32" style="border-radius:9px;display:block"></div>
+  <div class="hdr-texts">
+    <div class="hdr-title" id="hdrTitle">VentCalc</div>
+    <div class="hdr-sub">Marine Ventilation Guide</div>
+  </div>
+  <div class="hdr-right">
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle theme"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+    <button class="install-btn" id="installBtn" onclick="installApp()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Install</button>
+  </div>
+</header>
+
+<!-- SWIPE CONTAINER -->
+<div id="swipeWrap">
+<div class="tab-strip" id="tabStrip">
+
+<!-- ════ TAB 0: HOME ════ -->
+<div class="tab-panel active" id="t0">
+<div class="page">
+  <div style="background:linear-gradient(135deg,var(--bg3),var(--bg4));border:1px solid var(--brd);border-radius:var(--r3);padding:1.4rem;margin-bottom:1.1rem;position:relative;overflow:hidden">
+    <div style="position:absolute;right:-10px;bottom:-20px;font-size:100px;opacity:.05;pointer-events:none">⚓</div>
+    <div class="eyebrow">Maritime Cargo Ventilation</div>
+    <h1 style="font-size:1.55rem;font-weight:800;line-height:1.2;margin-bottom:.6rem">Hold Ventilation<br><span style="color:var(--teal)">Decision Guide</span></h1>
+    <p style="color:var(--txt2);font-size:13px;line-height:1.7;margin-bottom:1rem">Professional tool for Chief Officers. Dew point calculations, voyage logs, trend analysis — works 100% offline.</p>
+    <div style="background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.25);border-radius:9px;padding:.8rem 1rem;display:flex;gap:9px">
+      <span style="font-size:1.1rem;flex-shrink:0">⚓</span>
+      <p style="color:var(--teal);font-weight:600;font-size:12px;line-height:1.55">GOLDEN RULE — Ventilate ONLY when outside dew point is LOWER THAN OR EQUAL TO hold dew point.</p>
+    </div>
+  </div>
+
+  <div class="sh"><h2>Why We Ventilate</h2></div>
+  <div class="grid2" style="margin-bottom:1rem">
+    <div class="card"><div style="font-size:1.6rem;margin-bottom:.5rem">🫁</div><h3 style="font-size:13px;font-weight:700;margin-bottom:.35rem">Safety</h3><p style="color:var(--txt2);font-size:12px;line-height:1.6">Maintain O₂ ≥ 20.5% for safe entry. Remove poisonous, flammable or fumigant gases from cargo holds.</p><div style="margin-top:.6rem"><span class="pill pill-red">Check O₂ before entry</span></div></div>
+    <div class="card"><div style="font-size:1.6rem;margin-bottom:.5rem"></div><h3 style="font-size:13px;font-weight:700;margin-bottom:.35rem">Cargo Care</h3><p style="color:var(--txt2);font-size:12px;line-height:1.6">Prevent <strong style="color:var(--txt)">cargo sweat</strong> and <strong style="color:var(--txt)">ship sweat</strong>. Both cause rust, mould and multi-million dollar claims.</p><div style="margin-top:.6rem"><span class="pill pill-teal">Use dew point rule</span></div></div>
+  </div>
+
+  <div class="sh"><h2>Three Decision Rules</h2></div>
+  <div class="grid3" style="margin-bottom:1rem">
+    <div class="card" style="border-color:rgba(34,197,94,.25)"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--green);margin-bottom:.35rem">Hot → Cold</div><div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:.3rem">Ventilate Boldly</div><p style="color:var(--txt2);font-size:11px;line-height:1.55">Cargo warm, outside cold. Hold air more humid than outside — bring outside air in.</p></div>
+    <div class="card" style="border-color:rgba(232,64,64,.25)"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--red);margin-bottom:.35rem">Cold → Hot</div><div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:.3rem">Do NOT Ventilate</div><p style="color:var(--txt2);font-size:11px;line-height:1.55">Outside air warm and humid. Opening holds introduces moisture onto cold cargo — cargo sweat guaranteed.</p></div>
+    <div class="card" style="border-color:rgba(240,165,0,.25)"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--amber);margin-bottom:.35rem">No Hygrometer</div><div style="font-size:13px;font-weight:700;color:var(--amber);margin-bottom:.3rem">3-Degree Rule</div><p style="color:var(--txt2);font-size:11px;line-height:1.55">Ventilate only if outside temp is ≥ 3°C LOWER than cargo temp. Hygroscopic cargo only.</p></div>
+  </div>
+
+  <div class="sh"><h2>Steel Cargo RH Thresholds</h2><p>Corrosion accelerates exponentially above 60% RH</p></div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1rem">
+    <div style="text-align:center;border-radius:10px;padding:.7rem .4rem;background:var(--green-dim);border:1px solid rgba(34,197,94,.2)"><div style="font-size:1rem;font-weight:800;color:var(--green)">&lt;40%</div><div style="font-size:10px;color:var(--txt2);margin-top:2px">Safe zone</div></div>
+    <div style="text-align:center;border-radius:10px;padding:.7rem .4rem;background:var(--amber-dim);border:1px solid rgba(240,165,0,.2)"><div style="font-size:1rem;font-weight:800;color:var(--amber)">40–60%</div><div style="font-size:10px;color:var(--txt2);margin-top:2px">Rust begins</div></div>
+    <div style="text-align:center;border-radius:10px;padding:.7rem .4rem;background:var(--red-dim);border:1px solid rgba(232,64,64,.2)"><div style="font-size:1rem;font-weight:800;color:var(--red)">&gt;60%</div><div style="font-size:10px;color:var(--txt2);margin-top:2px">Exponential</div></div>
+  </div>
+</div>
+</div>
+
+<!-- ════ TAB 1: CALCULATOR ════ -->
+<div class="tab-panel" id="t1">
+<div class="page">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:.85rem">
+    <div><div class="eyebrow">Dew Point Calculator</div><h2 style="font-size:1.1rem;font-weight:800">Hold Condition Worksheet</h2></div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="clearAll()">Clear</button>
+      <button class="btn btn-ghost btn-sm" onclick="loadDemo()">Demo</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('calc')">Export</button>
+    </div>
+  </div>
+
+  <!-- Voyage selector -->
+  <div class="voy-sel">
+    <span class="vs-label">Voyage</span>
+    <select id="calcVoySelect" onchange="onCalcVoyChange()"><option value="">— No voyage selected —</option></select>
+    <button class="btn btn-ghost btn-sm vs-new" onclick="openNewVoyModal()">New</button>
+  </div>
+
+  <!-- Condensation risk -->
+  <div class="risk-bar" onclick="openSub('sub-risk')">
+    <div class="risk-dot low" id="riskLight"></div>
+    <div class="risk-txt"><div class="rl">Condensation Risk</div><div class="rv" id="riskLabel">LOW — Conditions safe</div></div><div class="risk-arr"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div class="risk-arr">›</div>
+  </div>
+
+  <!-- ① Voyage ID -->
+  <div class="blk">
+    <div class="blk-lbl">① Voyage ID</div>
+    <div class="g2">
+      <div class="fld"><label>Vessel</label><input type="text" id="cv" placeholder="MV Example" oninput="saveLocal()"></div>
+      <div class="fld"><label>Voyage No.</label><input type="text" id="cvoy" placeholder="2603" oninput="saveLocal()"></div>
+      <div class="fld"><label>Chief Officer</label><input type="text" id="cco" placeholder="Name" oninput="saveLocal()"></div>
+      <div class="fld"><label>Date</label><input type="date" id="cdate" oninput="saveLocal()"></div>
+      <div class="fld"><label>Time (LT/UTC)</label><input type="time" id="ctime" oninput="saveLocal()"></div>
+      <div class="fld"><label>Position / Port</label><input type="text" id="cpos" placeholder="12°S 150°E" oninput="saveLocal()"></div>
+    </div>
+  </div>
+
+  <!-- ② Outside -->
+  <div class="out-blk">
+    <div class="blk-lbl">② Outside Air</div>
+    <div class="g2" style="margin-bottom:.65rem">
+      <div class="fld"><label>Dry Bulb °C</label><input type="number" id="odry" placeholder="15.0" step="0.1" inputmode="decimal" oninput="calcOut()"></div>
+      <div class="fld"><label>Wet Bulb °C</label><input type="number" id="owet" placeholder="11.0" step="0.1" inputmode="decimal" oninput="calcOut()"></div>
+    </div>
+    <div class="g2">
+      <div class="res-box"><span class="rl">Dew Point</span><span class="rv" id="odp">—</span></div>
+      <div class="res-box"><span class="rl">Rel. Humidity</span><span class="rv" id="orh">—</span></div>
+    </div>
+  </div>
+
+  <!-- ③ Summary -->
+  <div class="blk-lbl">③ Status Summary</div>
+  <div class="sum-row">
+    <div class="sum-box g"><div class="sv" id="sv">—</div><div class="sl"> Vent</div></div>
+    <div class="sum-box r"><div class="sv" id="sn">—</div><div class="sl"> No Vent</div></div>
+    <div class="sum-box a"><div class="sv" id="sc">—</div><div class="sl">⚠ Caution</div></div>
+    <div class="sum-box"><div class="sv" id="se">—</div><div class="sl">Empty</div></div>
+  </div>
+
+  <!-- ④ Holds -->
+  <div class="blk-lbl">④ Hold Readings <span style="color:var(--txt3);font-weight:400;font-size:9px">scroll →</span></div>
+  <div class="htbl-wrap">
+    <table class="htbl"><thead><tr>
+      <th>Hold</th><th>Cargo</th><th>Dry°C</th><th>Wet°C</th><th>RH%</th><th>DP°C</th><th>Delta</th><th>Decision</th>
+    </tr></thead><tbody id="hbody"></tbody></table>
+  </div>
+
+  <!-- ⑤ DP Delta legend -->
+  <div class="dp-legend">
+    <h4>⑤ Understanding DP Delta</h4>
+    <div class="dp-formula">DP Delta = Hold Dew Point − Outside Dew Point</div>
+    <div class="dp-cards">
+      <div class="dp-card pos"><div class="dc-val">+5.6°C</div><div class="dc-dec"> VENTILATE</div><div class="dc-why">Hold MORE humid than outside. Outside air drier — it removes moisture. Larger positive = safer to ventilate.</div></div>
+      <div class="dp-card neg"><div class="dc-val">−3.2°C</div><div class="dc-dec"> NO VENT</div><div class="dc-why">Outside MORE humid. Bringing it in ADDS moisture, causes cargo sweat. Seal all vents immediately.</div></div>
+      <div class="dp-card zer"><div class="dc-val">≈ 0°C</div><div class="dc-dec">⚠ MONITOR</div><div class="dc-why">Equal dew points. No benefit ventilating. Re-measure every 30 min. Stop for steel cargo (RH &gt;60% = rust risk).</div></div>
+    </div>
+    <div style="background:rgba(0,0,0,.2);border-radius:8px;padding:.65rem .85rem;font-size:11px;color:var(--txt2);line-height:1.7">
+      <strong style="color:var(--txt)">Example:</strong> Hold DP=14.2°C, Outside DP=7.6°C → Delta=<span style="color:var(--green)">+6.6°C → Ventilate confidently.</span><br>
+      <strong style="color:var(--amber)">Steel warning:</strong> RH &gt;60% = exponential rust even with positive delta. Use dehumidification.
+    </div>
+  </div>
+
+  <!-- ⑥ Weather -->
+  <div class="blk">
+    <div class="blk-lbl">⑥ Weather Conditions</div>
+    <div class="g2">
+      <div class="fld"><label>Sea State</label><select id="wBeaufort"><option value="">Select…</option><option>0 — Calm</option><option>1 — Light Air</option><option>2 — Light Breeze</option><option>3 — Gentle Breeze</option><option>4 — Moderate Breeze</option><option>5 — Fresh Breeze</option><option>6 — Strong Breeze</option><option>7 — Near Gale</option><option>8 — Gale</option><option>9 — Strong Gale</option><option>10 — Storm</option><option>11 — Violent Storm</option><option>12 — Hurricane</option></select></div>
+      <div class="fld"><label>Visibility</label><select id="wVis"><option value="">Select…</option><option>Good (&gt;10nm)</option><option>Moderate (2–10nm)</option><option>Poor (&lt;2nm)</option><option>Fog (&lt;0.5nm)</option></select></div>
+      <div class="fld"><label>Precipitation</label><select id="wPrec"><option value="">Select…</option><option>None</option><option>Light Rain</option><option>Heavy Rain</option><option>Sea Spray</option><option>Snow</option></select></div>
+      <div class="fld"><label>Vent Suspended?</label><select id="wSusp"><option value="">Not suspended</option><option>Weather — night</option><option>Weather — bad seas</option><option>Weather — rain/spray</option><option>Fumigation</option><option>Port / Cargo ops</option><option>Other</option></select></div>
+    </div>
+  </div>
+
+  <!-- ⑦ Add to log -->
+  <div class="log-cta">
+    <h4>⑦ Save to Voyage Log</h4>
+    <p>Snapshots all readings + weather as a timestamped entry. Primary legal defence against cargo claims — inspect twice daily.</p>
+    <div class="log-confirm" id="lconf">Entry saved to Voyage Log</div>
+    <button class="btn btn-primary btn-full" onclick="addEntry()">Add to Voyage Log</button>
+  </div>
+</div>
+</div>
+
+<!-- ════ TAB 2: LOG ════ -->
+<div class="tab-panel" id="t2">
+<div class="page">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.65rem;margin-bottom:.85rem">
+    <div><div class="eyebrow">Voyage Documentation</div><h2 style="font-size:1.1rem;font-weight:800">Cargo Ventilation Log</h2></div>
+    <div style="display:flex;gap:5px">
+      <button class="btn btn-ghost btn-sm" onclick="clearLog()">Clear</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('log')">Export</button>
+    </div>
+  </div>
+
+  <!-- Risk + Chart tiles -->
+  <div class="tile-grid" style="margin-bottom:1rem">
+    <div class="tile" onclick="openSub('sub-risk')">
+      <div class="t-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+      <div class="t-title">Risk Indicator</div>
+      <div class="t-sub">Condensation risk for all holds</div>
+    </div>
+    <div class="tile" onclick="openSub('sub-chart')">
+      <div class="t-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+      <div class="t-title">Trend Chart</div>
+      <div class="t-sub">DP delta over time per hold</div>
+    </div>
+  </div>
+
+  <!-- Voyage list tiles -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.65rem">
+    <div class="eyebrow" style="margin-bottom:0">Select Voyage</div>
+    <button class="btn btn-ghost btn-sm" onclick="openNewVoyModal()">New Voyage</button>
+  </div>
+  <div id="voyList" style="margin-bottom:1rem"></div>
+
+  <!-- Stats -->
+  <div id="lstats" style="display:none;margin-bottom:.85rem">
+    <div class="sum-row">
+      <div class="sum-box"><div class="sv" id="lsc" style="font-size:1.3rem">0</div><div class="sl">Entries</div></div>
+      <div class="sum-box"><div class="sv" id="lsv" style="font-size:.75rem;color:var(--teal)">—</div><div class="sl">Vessel</div></div>
+      <div class="sum-box"><div class="sv" id="lsvoy" style="font-size:.9rem;color:var(--teal)">—</div><div class="sl">Voyage</div></div>
+      <div class="sum-box"><div class="sv" id="lsco" style="font-size:.7rem">—</div><div class="sl">C/O</div></div>
+    </div>
+  </div>
+
+  <div id="lentries">
+    <div style="text-align:center;padding:2.5rem 1rem;color:var(--txt2);font-size:13px;background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r2)">
+      Create or select a voyage above,<br>then add entries from the <strong style="color:var(--teal)">Calculator</strong> tab.
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ════ TAB 3: MORE ════ -->
+<div class="tab-panel" id="t3">
+<div class="page">
+  <div class="eyebrow" style="margin-bottom:.5rem">Tools & Reference</div>
+  <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:1.1rem">More</h2>
+  <div class="tile-grid">
+    <div class="tile" onclick="openSub('sub-dpTable')">
+      <div class="t-icon"></div>
+      <div class="t-title">Dew Point Table</div>
+      <div class="t-sub">Offline psychrometric lookup — dry bulb vs depression</div>
+    </div>
+    <div class="tile" onclick="openSub('sub-cargo')">
+      <div class="t-icon"></div>
+      <div class="t-title">Cargo Reference</div>
+      <div class="t-sub">Quick-ref cards for 8 cargo types</div>
+    </div>
+    <div class="tile" onclick="openSub('sub-guide')">
+      <div class="t-icon"></div>
+      <div class="t-title">Ventilation Guide</div>
+      <div class="t-sub">Procedures, rules & log requirements</div>
+    </div>
+    <div class="tile" onclick="openSub('sub-kb')">
+      <div class="t-icon"></div>
+      <div class="t-title">Knowledge Base</div>
+      <div class="t-sub">Case studies, P&I references & links</div>
+    </div>
+    <div class="tile" onclick="openSub('sub-quiz')">
+      <div class="t-icon"></div>
+      <div class="t-title">Crew Training Quiz</div>
+      <div class="t-sub">15 questions on ventilation rules & procedures</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ════ TAB 4: SETTINGS ════ -->
+<div class="tab-panel" id="t4">
+<div class="page">
+  <div class="eyebrow" style="margin-bottom:.5rem">Preferences & Info</div>
+  <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:1.25rem">Settings</h2>
+
+  <!-- How to use -->
+  <div style="background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r2);overflow:hidden;margin-bottom:1rem">
+    <div style="background:var(--bg3);padding:.85rem 1rem;border-bottom:1px solid var(--brd)">
+      <div style="font-weight:700;font-size:14px">How to Use VentCalc</div>
+    </div>
+    <div style="padding:1rem">
+      <div style="display:flex;flex-direction:column;gap:.85rem">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--teal-dim);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">1</div>
+          <div><div style="font-weight:600;font-size:13px;margin-bottom:2px">Create a Voyage</div><div style="font-size:12px;color:var(--txt2)">Go to Log tab → tap <strong style="color:var(--teal)">New Voyage</strong>. Give it a name and vessel. Set it as active.</div></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--teal-dim);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">2</div>
+          <div><div style="font-weight:600;font-size:13px;margin-bottom:2px">Enter Outside Air</div><div style="font-size:12px;color:var(--txt2)">In Calculator → Outside Air block. Measure dry & wet bulb at hold exhaust with a hygrometer. Dew point calculates automatically.</div></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--teal-dim);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">3</div>
+          <div><div style="font-weight:600;font-size:13px;margin-bottom:2px">Fill Hold Readings</div><div style="font-size:12px;color:var(--txt2)">Enter cargo type, dry & wet bulb for each loaded hold. Scroll the table right. Decision shows instantly — green = ventilate, red = no vent.</div></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--teal-dim);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">4</div>
+          <div><div style="font-weight:600;font-size:13px;margin-bottom:2px">Add Weather & Save</div><div style="font-size:12px;color:var(--txt2)">Fill in sea state and conditions in the Weather block. Tap <strong style="color:var(--teal)">Add to Voyage Log</strong>. Do this at least twice daily.</div></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--teal-dim);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">5</div>
+          <div><div style="font-weight:600;font-size:13px;margin-bottom:2px">Export at Port</div><div style="font-size:12px;color:var(--txt2)">Log tab → Export → PDF or Excel. Attach to voyage file. This is your legal defence against cargo damage claims.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data management -->
+  <div style="background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r2);overflow:hidden;margin-bottom:1rem">
+    <div style="background:var(--bg3);padding:.85rem 1rem;border-bottom:1px solid var(--brd)">
+      <div style="font-weight:700;font-size:14px">Data & Storage</div>
+    </div>
+    <div style="padding:1rem;display:flex;flex-direction:column;gap:.75rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px">
+        <div><div style="font-weight:500">Storage used</div><div style="font-size:11px;color:var(--txt2);margin-top:2px" id="storageInfo">Calculating...</div></div>
+        <div style="font-family:monospace;font-weight:700;color:var(--teal)" id="storageSize">—</div>
+      </div>
+      <div style="border-top:1px solid var(--brd);padding-top:.75rem;display:flex;flex-direction:column;gap:.6rem">
+        <button class="btn btn-ghost btn-full" onclick="clearCalcData()" style="justify-content:flex-start;font-size:13px">Clear Calculator Data</button>
+        <button class="btn btn-ghost btn-full" onclick="clearAllVoyages()" style="justify-content:flex-start;font-size:13px;color:var(--amber)">Clear All Voyages & Logs</button>
+        <button class="btn btn-danger btn-full" onclick="resetApp()" style="justify-content:flex-start;font-size:13px">Reset App (clear everything)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- About -->
+  <div style="background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r2);overflow:hidden;margin-bottom:1rem">
+    <div style="background:var(--bg3);padding:.85rem 1rem;border-bottom:1px solid var(--brd)">
+      <div style="font-weight:700;font-size:14px">About</div>
+    </div>
+    <div style="padding:1rem;display:flex;flex-direction:column;gap:.6rem;font-size:13px">
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--txt2)">App</span><span style="font-weight:600">VentCalc</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--txt2)">Version</span><span style="font-weight:600;font-family:monospace">1.0.0</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--txt2)">Developer</span><span style="font-weight:700;color:var(--teal)">Tango Juliet</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--txt2)">Platform</span><span style="font-weight:600">PWA — works offline</span></div>
+      <div style="border-top:1px solid var(--brd);padding-top:.6rem;font-size:11px;color:var(--txt2);line-height:1.6">
+        This app is a decision-support tool for cargo ventilation. Always apply professional maritime judgement. Not a substitute for onboard procedures or P&I club guidance.
+      </div>
+    </div>
+  </div>
+
+  <!-- Onboarding reset -->
+  <button class="btn btn-ghost btn-full" onclick="localStorage.removeItem('vc_ob');location.reload()" style="font-size:13px;margin-bottom:.5rem">Replay Welcome Tutorial</button>
+
+</div>
+</div>
+
+</div><!-- /tab-strip -->
+</div><!-- /swipeWrap -->
+
+<!-- BOTTOM NAV -->
+<nav class="bnav">
+  <div class="bnav-inner">
+    <button class="ntab on" onclick="goTab(0)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nl">Home</span></button>
+    <button class="ntab" onclick="goTab(1)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/><line x1="14" y1="18" x2="16" y2="18"/></svg><span class="nl">Calc</span></button>
+    <button class="ntab" onclick="goTab(2)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span class="nl">Log</span></button>
+    <button class="ntab" onclick="goTab(3)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg><span class="nl">More</span></button>
+    <button class="ntab" onclick="goTab(4)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span class="nl">Settings</span></button>
+  </div>
+</nav>
+
+</div><!-- /appShell -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- EXPORT MODAL -->
+<div id="expmodal" class="modal-bg">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-hdr">
+      <div><div class="eyebrow">Export</div><div style="font-size:1rem;font-weight:700" id="mtitle">Report</div></div>
+      <button class="modal-close" onclick="closeModal()"></button>
+    </div>
+    <div style="font-size:12px;color:var(--txt2);margin-bottom:.85rem;line-height:1.5" id="mdesc">Choose format</div>
+    <button class="exp-btn pdf" onclick="doExp('pdf')"><div class="eb-icon"></div><div><div class="eb-title">PDF Report</div><div class="eb-sub">Formatted with header, hold table and decisions. Ready to print.</div></div><div class="eb-ext">.pdf</div></button>
+    <button class="exp-btn xlsx" onclick="doExp('xlsx')"><div class="eb-icon"></div><div><div class="eb-title">Excel Spreadsheet</div><div class="eb-sub">Full .xlsx with colour-coded cells and summary sheet.</div></div><div class="eb-ext">.xlsx</div></button>
+    <button class="exp-btn txt" onclick="doExp('txt')"><div class="eb-icon"></div><div><div class="eb-title">Plain Text</div><div class="eb-sub">Fixed-width columns. Compatible with email or GMDSS.</div></div><div class="eb-ext">.txt</div></button>
+    <div class="exp-status" id="expstat"></div>
+  </div>
+</div>
+
+<!-- NEW VOYAGE MODAL -->
+<div id="newVoyModal" class="modal-bg">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-handle"></div>
+    <div class="modal-hdr">
+      <div><div class="eyebrow">Create</div><div style="font-size:1rem;font-weight:700">New Voyage</div></div>
+      <button class="modal-close" onclick="document.getElementById('newVoyModal').style.display='none'"></button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.75rem">
+      <div class="fld"><label>Voyage Name</label><input type="text" id="nvName" placeholder="Voyage 2603" style="min-height:44px"></div>
+      <div class="fld"><label>Vessel</label><input type="text" id="nvVessel" placeholder="MV Example" style="min-height:44px"></div>
+      <div class="g2">
+        <div class="fld"><label>From Port</label><input type="text" id="nvFrom" placeholder="Osaka" style="min-height:44px"></div>
+        <div class="fld"><label>To Port</label><input type="text" id="nvTo" placeholder="Sydney" style="min-height:44px"></div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="createVoyage()" style="margin-top:.25rem">Create Voyage</button>
+    </div>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div id="onboarding">
+  <div class="ob-dots" id="obDots"></div>
+  <div id="obSlides">
+    <div class="ob-slide on"><div class="ob-icon" style="background:none;box-shadow:none"><img src="icons/icon-192.png" width="72" height="72" style="border-radius:16px;display:block"></div><h2 class="ob-title">Welcome to <em>VentCalc</em></h2><p class="ob-text">The professional marine cargo ventilation guide for Chief Officers. Dew point calculations, voyage logs, trend charts — all offline.</p></div>
+    <div class="ob-slide"><div class="ob-icon" style="background:linear-gradient(145deg,#1a5fcc,#0e3a80)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0020 0h-3"/></svg></div><h2 class="ob-title">The <em>Calculator</em></h2><p class="ob-text">Enter dry and wet bulb temperatures for each hold. The app calculates dew point, relative humidity, and instantly tells you: Ventilate or No Vent.</p></div>
+    <div class="ob-slide"><div class="ob-icon" style="background:linear-gradient(145deg,#007a5e,#004d3b)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0020 0h-3"/></svg></div><h2 class="ob-title">The <em>Golden Rule</em></h2><p class="ob-text">Ventilate ONLY when the dew point of outside air is LOWER than hold dew point. DP Delta shows you the margin at a glance.</p></div>
+    <div class="ob-slide"><div class="ob-icon" style="background:linear-gradient(145deg,#8a4f00,#5a3300)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0020 0h-3"/></svg></div><h2 class="ob-title">Your <em>Legal Defence</em></h2><p class="ob-text">The Voyage Log is your legal defence against cargo claims. Create voyages, add entries twice daily, export as PDF or Excel for your voyage file.</p></div>
+    <div class="ob-slide"><div class="ob-icon" style="background:linear-gradient(145deg,#1db954,#148a3c)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0020 0h-3"/></svg></div><h2 class="ob-title">You're <em>Ready</em></h2><p class="ob-text">Swipe left and right to navigate between tabs. Tap any card in More to open detailed tools. Let's get started.</p></div>
+  </div>
+  <div class="ob-btns">
+    <button class="btn btn-ghost" id="obSkip" onclick="finishOnboarding()" style="flex:1">Skip</button>
+    <button class="btn btn-primary" id="obNext" onclick="obAdvance()" style="flex:2">Next →</button>
+  </div>
+</div>
+
+<!-- SUB PAGES -->
+<div class="sub-page" id="sub-risk">
+  <div class="sub-hdr">
+    <button class="sub-back" onclick="closeSub()" title="Back">
+      <span style="font-size:15px">←</span>
+    </button>
+    <div class="sub-title">Condensation Risk Indicator</div>
+    <button onclick="closeSub()" style="margin-left:auto;display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:var(--txt2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .18s" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.07)'">
+      ← Back to Main
+    </button>
+  </div>
+  <div class="sub-body"><div class="page" id="riskPageContent"></div></div>
+</div>
+
+<div class="sub-page" id="sub-chart">
+  <div class="sub-hdr">
+    <button class="sub-back" onclick="closeSub()" title="Back">
+      <span style="font-size:15px">←</span>
+    </button>
+    <div class="sub-title">Trend Chart</div>
+    <button onclick="closeSub()" style="margin-left:auto;display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:var(--txt2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .18s" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.07)'">
+      ← Back to Main
+    </button>
+  </div>
+  <div class="sub-body"><div class="page" id="chartPageContent"></div></div>
+</div>
+
+<div class="sub-page" id="sub-dpTable">
+  <div class="sub-hdr">
+    <button class="sub-back" onclick="closeSub()" title="Back">
+      <span style="font-size:15px">←</span>
+    </button>
+    <div class="sub-title">Dew Point Table</div>
+    <button onclick="closeSub()" style="margin-left:auto;display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:var(--txt2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .18s" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.07)'">
+      ← Back to Main
+    </button>
+  </div>
+  <div class="sub-body"><div class="page" id="dpTableContent"></div></div>
+</div>
+
+<div class="sub-page" id="sub-cargo">
+  <div class="sub-hdr">
+    <button class="sub-back" onclick="closeSub()" title="Back">
+      <span style="font-size:15px">←</span>
+    </button>
+    <div class="sub-title">Cargo Quick Reference</div>
+    <button onclick="closeSub()" style="margin-left:auto;display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:var(--txt2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .18s" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.07)'">
+      ← Back to Main
+    </button>
+  </div>
+  <div class="sub-body"><div class="page" id="cargoContent"></div></div>
+</div>
+
+<div class="sub-page" id="sub-guide">
+  <div class="sub-hdr">
+    <button class="sub-back" onclick="closeSub()" title="Back">
+      <span style="font-size:15px">←</span>
+    </button>
+    <div class="sub-title">Ventilation Guide</div>
+    <button onclick="closeSub()" style="margin-left:auto;display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:var(--txt2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .18s" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.07)'">
+      ← Back to Main
+    </button>
+  </div>
+  <div class="sub-body"><div class="page" id="guideContent"></div></div>
+</div>
+
+<div class="sub-page" id="sub-kb">
+  <div class="sub-hdr">
+    <button class="sub-back" onclick="closeSub()" title="Back">
+      <span style="font-size:15px">←</span>
+    </button>
+    <div class="sub-title">Knowledge Base</div>
+    <button onclick="closeSub()" style="margin-left:auto;display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:var(--txt2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .18s" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.07)'">
+      ← Back to Main
+    </button>
+  </div>
+  <div class="sub-body"><div class="page" id="kbContent"></div></div>
+</div>
+
+<div class="sub-page" id="sub-quiz">
+  <div class="sub-hdr">
+    <button class="sub-back" onclick="closeSub()" title="Back">
+      <span style="font-size:15px">←</span>
+    </button>
+    <div class="sub-title">Crew Training Quiz</div>
+    <button onclick="closeSub()" style="margin-left:auto;display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:var(--txt2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .18s" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.07)'">
+      ← Back to Main
+    </button>
+  </div>
+  <div class="sub-body"><div class="page"><div class="quiz-wrap" id="quizWrap"></div></div></div>
+</div>
+<script>
+// ══════════════════════════════════════════════
+// SWIPE NAV
+// ══════════════════════════════════════════════
+let curTab = 0;
+const TABS = 5;
+let touchStartX = 0, touchStartY = 0, swiping = false;
+
+function goTab(idx, animate=true){
+  curTab = Math.max(0, Math.min(TABS-1, idx));
+  // Hide all panels, show active
+  for(let i=0;i<TABS;i++){
+    const p=document.getElementById('t'+i);
+    if(p) p.classList.toggle('active', i===curTab);
+  }
+  document.querySelectorAll('.ntab').forEach((t,i)=>t.classList.toggle('on', i===curTab));
+  // scroll tab to top
+  const panel = document.getElementById('t'+curTab);
+  if(panel) panel.scrollTo(0,0);
+  if(curTab===2) renderVoyList();
+  if(curTab===4) updStorageInfo();
+}
+
+function isInsideHScroll(el){
+  while(el && el !== document.body){
+    var style = window.getComputedStyle(el);
+    var ox = style.overflowX;
+    if((ox==='auto'||ox==='scroll') && el.scrollWidth > el.clientWidth+2) return true;
+    el = el.parentElement;
+  }
+  return false;
+}
+var swipeLocked = false;
+const swipeWrap = document.getElementById('swipeWrap');
+swipeWrap.addEventListener('touchstart', function(e){
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  swiping = false;
+  swipeLocked = isInsideHScroll(e.target);
+}, {passive:true});
+swipeWrap.addEventListener('touchmove', function(e){
+  if(swipeLocked) return;
+  const dx = e.touches[0].clientX - touchStartX;
+  const dy = e.touches[0].clientY - touchStartY;
+  if(!swiping && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 12){
+    swiping = true;
+  }
+}, {passive:true});
+swipeWrap.addEventListener('touchend', function(e){
+  if(swipeLocked){ swipeLocked=false; swiping=false; return; }
+  if(!swiping){ swiping=false; return; }
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if(Math.abs(dx) > 55) goTab(curTab + (dx < 0 ? 1 : -1));
+  swiping = false;
+}, {passive:true});
+
+// ══════════════════════════════════════════════
+// SUB PAGE SYSTEM
+// ══════════════════════════════════════════════
+let currentSub = null;
+function openSub(id){
+  // Build content if needed
+  if(id==='sub-dpTable') buildDPTable();
+  if(id==='sub-cargo') buildCargoRef();
+  if(id==='sub-guide') buildGuide();
+  if(id==='sub-kb') buildKB();
+  if(id==='sub-quiz'){renderQuiz();}
+  if(id==='sub-risk') buildRiskPage();
+  if(id==='sub-chart') buildChartPage();
+  const el = document.getElementById(id);
+  el.classList.add('open');
+  currentSub = id;
+  document.getElementById('hdrBack').classList.add('show');
+  // Set header title
+  const titles = {'sub-risk':'Risk Indicator','sub-chart':'Trend Chart','sub-dpTable':'Dew Point Table','sub-cargo':'Cargo Reference','sub-guide':'Ventilation Guide','sub-kb':'Knowledge Base'};
+}
+function closeSub(){
+  if(currentSub){
+    document.getElementById(currentSub).classList.remove('open');
+    currentSub = null;
+  }
+  document.getElementById('hdrBack').classList.remove('show');
+}
+// Android back button
+window.addEventListener('popstate', ()=>{ if(currentSub) closeSub(); });
+history.pushState(null,'','');
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
+function showToast(msg, color='var(--green)'){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.color = color;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ══════════════════════════════════════════════
+// ONBOARDING
+// ══════════════════════════════════════════════
+let obIdx = 0;
+const obSlides = document.querySelectorAll('.ob-slide');
+const obDots = document.getElementById('obDots');
+function buildObDots(){
+  obDots.innerHTML='';
+  obSlides.forEach((_,i)=>{const d=document.createElement('div');d.className='ob-dot'+(i===0?' on':'');obDots.appendChild(d);});
+}
+function obAdvance(){
+  obSlides[obIdx].classList.remove('on');
+  document.querySelectorAll('.ob-dot')[obIdx].classList.remove('on');
+  obIdx++;
+  if(obIdx >= obSlides.length){ finishOnboarding(); return; }
+  obSlides[obIdx].classList.add('on');
+  document.querySelectorAll('.ob-dot')[obIdx].classList.add('on');
+  if(obIdx === obSlides.length-1) document.getElementById('obNext').textContent = "Let's Go!";
+}
+function finishOnboarding(){
+  document.getElementById('onboarding').style.display='none';
+  localStorage.setItem('vc_ob','1');
+}
+buildObDots();
+if(!localStorage.getItem('vc_ob')) document.getElementById('onboarding').style.display='flex';
+else document.getElementById('onboarding').style.display='none';
+
+// ══════════════════════════════════════════════
+// DEW POINT — Magnus/Sprung formula
+// ══════════════════════════════════════════════
+function dpCalc(dry, wet){
+  if(isNaN(dry)||isNaN(wet)||wet>dry) return null;
+  const A=6.112, B=17.67, C=243.5;
+  const esd = A*Math.exp(B*dry/(C+dry));
+  const esw = A*Math.exp(B*wet/(C+wet));
+  const e = esw - 0.799*(dry-wet);
+  if(e<=0) return null;
+  const rh = Math.min(100, Math.max(0, Math.round(e/esd*100)));
+  const lne = Math.log(e/A);
+  return { dp: Math.round(C*lne/(B-lne)*10)/10, rh };
+}
+
+// ══════════════════════════════════════════════
+// OUTSIDE AIR
+// ══════════════════════════════════════════════
+function calcOut(){
+  const d=parseFloat(document.getElementById('odry').value);
+  const w=parseFloat(document.getElementById('owet').value);
+  const r=dpCalc(d,w);
+  document.getElementById('odp').textContent = r ? r.dp.toFixed(1)+'°C' : '—';
+  document.getElementById('orh').textContent = r ? r.rh+'%' : '—';
+  updAll();
+}
+function getOutDP(){
+  const r=dpCalc(parseFloat(document.getElementById('odry').value), parseFloat(document.getElementById('owet').value));
+  return r ? r.dp : null;
+}
+
+// ══════════════════════════════════════════════
+// HOLDS
+// ══════════════════════════════════════════════
+const HOLDS = 10;
+let hd = Array(HOLDS).fill(null).map(()=>({dry:'',wet:'',cargo:'',notes:''}));
+
+function buildTbl(){
+  const tb = document.getElementById('hbody'); tb.innerHTML='';
+  for(let i=0;i<HOLDS;i++){
+    const tr=document.createElement('tr');
+    tr.innerHTML=
+      '<td style="font-weight:700;color:var(--teal);white-space:nowrap">H'+(i+1)+'</td>'+
+      '<td><input class="ci" type="text" placeholder="Steel…" id="hc'+i+'" value="'+(hd[i].cargo||'')+'" oninput="hch('+i+')"></td>'+
+      '<td><input type="number" step="0.5" id="hdy'+i+'" placeholder="—" value="'+(hd[i].dry||'')+'" oninput="hch('+i+')" inputmode="decimal"></td>'+
+      '<td><input type="number" step="0.5" id="hwt'+i+'" placeholder="—" value="'+(hd[i].wet||'')+'" oninput="hch('+i+')" inputmode="decimal"></td>'+
+      '<td class="mono" id="hrh'+i+'" style="color:var(--txt2)">—</td>'+
+      '<td class="mono" id="hdp'+i+'" style="color:var(--teal)">—</td>'+
+      '<td class="mono" id="hdt'+i+'" style="font-weight:700">—</td>'+
+      '<td id="hvt'+i+'"><span class="vpill e">—</span></td>';
+    tb.appendChild(tr);
+  }
+}
+function hch(i){
+  hd[i].dry=document.getElementById('hdy'+i).value;
+  hd[i].wet=document.getElementById('hwt'+i).value;
+  hd[i].cargo=document.getElementById('hc'+i).value;
+  updHold(i); updSum(); updRisk(); saveLocal();
+}
+function getHoldResult(i){
+  const dry=parseFloat(hd[i].dry), wet=parseFloat(hd[i].wet);
+  const cargo=(hd[i].cargo||'').toLowerCase();
+  const isEmpty=cargo.includes('empty')||(!hd[i].cargo&&!hd[i].dry);
+  if(isEmpty||isNaN(dry)||isNaN(wet)||wet>dry) return null;
+  const res=dpCalc(dry,wet); if(!res) return null;
+  const outDP=getOutDP();
+  const delta=outDP!==null ? Math.round((res.dp-outDP)*10)/10 : null;
+  let vent='e';
+  if(delta!==null){ if(delta>0)vent='v'; else if(delta===0)vent='c'; else vent='n'; }
+  if(res.rh>60&&vent==='n') vent='n';
+  return {rh:res.rh, dp:res.dp, delta, vent};
+}
+function updHold(i){
+  const dry=parseFloat(hd[i].dry), wet=parseFloat(hd[i].wet);
+  const cargo=(hd[i].cargo||'').toLowerCase();
+  const isEmpty=cargo.includes('empty')||(!hd[i].cargo&&!hd[i].dry);
+  const rhEl=document.getElementById('hrh'+i);
+  const dpEl=document.getElementById('hdp'+i);
+  const dtEl=document.getElementById('hdt'+i);
+  const vtEl=document.getElementById('hvt'+i);
+  if(isEmpty||isNaN(dry)){
+    rhEl.textContent='—'; dpEl.textContent='—'; dtEl.textContent='—';
+    dtEl.style.color='var(--txt2)'; vtEl.innerHTML='<span class="vpill e">Empty</span>'; return;
+  }
+  if(isNaN(wet)||wet>dry){vtEl.innerHTML='<span class="vpill e">Check</span>'; return;}
+  const res=dpCalc(dry,wet); if(!res) return;
+  rhEl.textContent=res.rh+'%';
+  rhEl.style.color=res.rh>=60?'var(--red)':res.rh>=50?'var(--amber)':'var(--green)';
+  dpEl.textContent=res.dp.toFixed(1)+'°C';
+  const outDP=getOutDP();
+  if(outDP===null){
+    dtEl.textContent='—'; dtEl.style.color='var(--txt2)';
+    vtEl.innerHTML=res.rh>=60?'<span class="vpill c">⚠ Hi RH</span>':'<span class="vpill e">Need outside</span>'; return;
+  }
+  const delta=Math.round((res.dp-outDP)*10)/10;
+  dtEl.textContent=(delta>=0?'+':'')+delta+'°C';
+  if(delta>0){dtEl.style.color='var(--green)'; vtEl.innerHTML='<span class="vpill v"> Ventilate</span>';}
+  else if(delta===0){dtEl.style.color='var(--amber)'; vtEl.innerHTML='<span class="vpill c">≈ Monitor</span>';}
+  else{dtEl.style.color='var(--red)'; vtEl.innerHTML='<span class="vpill n"> No Vent</span>';}
+  if(res.rh>60&&delta<=0) vtEl.innerHTML='<span class="vpill n"> No Vent·HiRH</span>';
+}
+function updAll(){ for(let i=0;i<HOLDS;i++) updHold(i); updSum(); updRisk(); }
+function updSum(){
+  let v=0,n=0,c=0,e=0;
+  for(let i=0;i<HOLDS;i++){
+    const t=document.getElementById('hvt'+i)?.textContent||'';
+    if(t.includes('Ventilate'))v++; else if(t.includes('No Vent'))n++; else if(t.includes('Monitor')||t.includes('Hi RH'))c++; else e++;
+  }
+  document.getElementById('sv').textContent=v;
+  document.getElementById('sn').textContent=n;
+  document.getElementById('sc').textContent=c;
+  document.getElementById('se').textContent=e;
+}
+
+// ══════════════════════════════════════════════
+// RISK INDICATOR
+// ══════════════════════════════════════════════
+function updRisk(){
+  let maxRisk=0;
+  for(let i=0;i<HOLDS;i++){
+    const r=getHoldResult(i); if(!r) continue;
+    if(r.vent==='n'&&r.rh>60) maxRisk=Math.max(maxRisk,4);
+    else if(r.vent==='n') maxRisk=Math.max(maxRisk,3);
+    else if(r.vent==='c'||r.rh>60) maxRisk=Math.max(maxRisk,2);
+    else if(r.vent==='v') maxRisk=Math.max(maxRisk,1);
+  }
+  const light=document.getElementById('riskLight')||document.getElementById('riskLight');
+  const label=document.getElementById('riskLabel');
+  const levels=[
+    {cls:'low',txt:'LOW — Conditions safe to ventilate'},
+    {cls:'low',txt:'LOW — Conditions favourable'},
+    {cls:'mod',txt:'MODERATE — Monitor closely'},
+    {cls:'high',txt:'HIGH — Ventilation not safe'},
+    {cls:'crit',txt:'CRITICAL — Stop vent, high RH & humidity ingress risk'},
+  ];
+  const l=levels[maxRisk];
+  light.className='risk-dot '+l.cls;
+  label.textContent=l.txt;
+}
+function buildRiskPage(){
+  const el=document.getElementById('riskPageContent');
+  let html='<div class="eyebrow">Condensation Risk Analysis</div><h2 style="font-size:1.1rem;font-weight:800;margin-bottom:1rem">Hold Risk Status</h2>';
+  const outDP=getOutDP();
+  for(let i=0;i<HOLDS;i++){
+    const r=getHoldResult(i);
+    const cargo=hd[i].cargo||'Hold '+(i+1);
+    let riskLvl='Unknown',riskClr='var(--txt2)',riskBg='rgba(255,255,255,.03)',advice='No data — enter readings in Calculator.';
+    if(r){
+      if(r.vent==='n'&&r.rh>60){riskLvl='CRITICAL';riskClr='#ff0040';riskBg='rgba(255,0,64,.08)';advice='STOP VENTILATION. Outside air wetter than hold AND RH >60%. Cargo sweat risk is high. Use dehumidifier if available.';}
+      else if(r.vent==='n'){riskLvl='HIGH';riskClr='var(--red)';riskBg='var(--red-dim)';advice='Do NOT ventilate. Outside dew point ('+outDP+'°C) higher than hold DP ('+r.dp+'°C). DP Delta: '+(r.delta)+'°C. Close all vents.';}
+      else if(r.vent==='c'||r.rh>60){riskLvl='MODERATE';riskClr='var(--amber)';riskBg='var(--amber-dim)';advice='Monitor closely. Conditions marginal. Re-measure every 30 minutes. '+(r.rh>60?'RH is '+r.rh+'% — rust risk for steel cargo.':'Delta is near zero.');}
+      else{riskLvl='LOW';riskClr='var(--green)';riskBg='var(--green-dim)';advice='Safe to ventilate. DP Delta: +'+(r.delta)+'°C. Hold DP ('+r.dp+'°C) > Outside DP ('+outDP+'°C).';}
+    }
+    html+='<div style="background:'+riskBg+';border:1px solid rgba(255,255,255,.08);border-radius:var(--r2);padding:1rem;margin-bottom:.75rem">'
+      +'<div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem">'
+      +'<div style="font-weight:700;font-size:14px;flex:1">H'+(i+1)+' — '+cargo+'</div>'
+      +'<span style="font-size:11px;font-weight:800;color:'+riskClr+'">'+riskLvl+'</span>'
+      +'</div>'
+      +(r?'<div style="display:flex;gap:.75rem;font-size:11px;font-family:monospace;flex-wrap:wrap;color:var(--txt2);margin-bottom:.5rem"><span>RH: <strong style="color:'+(r.rh>=60?'var(--red)':'var(--txt)')+'">'+r.rh+'%</strong></span><span>DP: <strong style="color:var(--teal)">'+r.dp+'°C</strong></span><span>Delta: <strong>'+(r.delta>=0?'+':'')+r.delta+'°C</strong></span></div>':'')
+      +'<div style="font-size:12px;color:var(--txt2);line-height:1.6">'+advice+'</div>'
+      +'</div>';
+  }
+  if(outDP===null) html+='<div class="rbox warn" style="margin-top:.75rem"><p>Enter outside air dry & wet bulb readings in the Calculator to activate risk analysis.</p></div>';
+  el.innerHTML=html;
+}
+
+// ══════════════════════════════════════════════
+// VOYAGE MANAGEMENT
+// ══════════════════════════════════════════════
+let voyages=[], currentVoyId=null;
+
+function createVoyage(){
+  const name=(document.getElementById('nvName').value.trim())||('Voyage '+Date.now());
+  const vessel=document.getElementById('nvVessel').value.trim()||'';
+  const from=document.getElementById('nvFrom').value.trim()||'';
+  const to=document.getElementById('nvTo').value.trim()||'';
+  const v={id:'v_'+Date.now(),name,vessel,from,to,created:new Date().toLocaleDateString(),status:'active',entries:[]};
+  voyages.push(v);
+  currentVoyId=v.id;
+  document.getElementById('newVoyModal').style.display='none';
+  ['nvName','nvVessel','nvFrom','nvTo'].forEach(id=>document.getElementById(id).value='');
+  saveLocal();
+  renderVoyList();
+  rebuildVoySelect();
+  showToast('Voyage created: '+name);
+}
+function setCurrentVoy(id){
+  currentVoyId=id;
+  saveLocal();
+  renderVoyList();
+  rebuildVoySelect();
+  renderEntries();
+  updLogStats();
+}
+function deleteVoyage(id){
+  const v=voyages.find(x=>x.id===id);
+  if(!v) return;
+  if(!confirm('Delete "'+v.name+'" and all its entries?')) return;
+  voyages=voyages.filter(x=>x.id!==id);
+  if(currentVoyId===id) currentVoyId=voyages.length?voyages[voyages.length-1].id:null;
+  saveLocal(); renderVoyList(); rebuildVoySelect(); renderEntries(); updLogStats();
+  showToast('Voyage deleted','var(--red)');
+}
+function getCurrentVoy(){ return voyages.find(v=>v.id===currentVoyId)||null; }
+function renderVoyList(){
+  const el=document.getElementById('voyList');
+  if(!voyages.length){
+    el.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--txt2);font-size:12px;background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r2)">No voyages yet. Tap <strong style="color:var(--teal)">New Voyage</strong> to create one.</div>';
+    return;
+  }
+  el.innerHTML=voyages.map(v=>{
+    const isActive=v.id===currentVoyId;
+    return '<div class="voy-item'+(isActive?' active':'')+'" onclick="setCurrentVoy(\''+v.id+'\')">'
+      +'<div class="vi-dot"></div>'
+      +'<div class="vi-body">'
+      +'<div class="vi-name">'+v.name+'</div>'
+      +'<div class="vi-meta">'+(v.vessel?v.vessel+' · ':'')+v.created+(v.from&&v.to?' · '+v.from+' → '+v.to:'')+'  <strong style="color:var(--teal)">'+v.entries.length+' entries</strong></div>'
+      +'</div>'
+      +(isActive?'<div class="vi-badge"><span class="pill pill-teal" style="font-size:9px">ACTIVE</span></div>':'')
+      +'<div class="vi-del" onclick="event.stopPropagation();deleteVoyage(\''+v.id+'\')"></div>'
+      +'</div>';
+  }).join('');
+}
+function rebuildVoySelect(){
+  const sel=document.getElementById('calcVoySelect');
+  sel.innerHTML='<option value="">— No voyage selected —</option>';
+  voyages.forEach(v=>{
+    const opt=document.createElement('option');
+    opt.value=v.id; opt.textContent=v.name+(v.vessel?' ('+v.vessel+')':'');
+    if(v.id===currentVoyId) opt.selected=true;
+    sel.appendChild(opt);
+  });
+}
+function onCalcVoyChange(){
+  currentVoyId=document.getElementById('calcVoySelect').value||null;
+  saveLocal(); renderVoyList();
+}
+function openNewVoyModal(){
+  document.getElementById('newVoyModal').style.display='flex';
+}
+document.getElementById('newVoyModal').addEventListener('click',function(e){if(e.target===this)this.style.display='none';});
+
+// ══════════════════════════════════════════════
+// LOG ENTRIES
+// ══════════════════════════════════════════════
+function addEntry(){
+  if(!currentVoyId){ showToast('Select or create a voyage first','var(--amber)'); goTab(2); return; }
+  const voy=getCurrentVoy(); if(!voy) return;
+  const v=document.getElementById('cv').value.trim()||voy.vessel||'Unknown';
+  const co=document.getElementById('cco').value.trim()||'—';
+  const dt=document.getElementById('cdate').value;
+  const tm=document.getElementById('ctime').value;
+  const pos=document.getElementById('cpos').value.trim()||'—';
+  const ts=dt&&tm?dt+'  '+tm:dt?dt+' (time not set)':(()=>{const n=new Date();return n.toLocaleDateString()+' '+n.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});})();
+  const outDry=document.getElementById('odry').value;
+  const outWet=document.getElementById('owet').value;
+  const outDP=document.getElementById('odp').textContent.replace('°C','').trim();
+  const outRH=document.getElementById('orh').textContent.replace('%','').trim();
+  const weather={
+    beaufort:document.getElementById('wBeaufort').value,
+    vis:document.getElementById('wVis').value,
+    prec:document.getElementById('wPrec').value,
+    susp:document.getElementById('wSusp').value
+  };
+  const holds=Array.from({length:HOLDS},(_,i)=>({
+    dry:hd[i].dry,wet:hd[i].wet,cargo:hd[i].cargo,notes:hd[i].notes,
+    rh:document.getElementById('hrh'+i).textContent.replace('%','').trim(),
+    dp:document.getElementById('hdp'+i).textContent.replace('°C','').trim(),
+    delta:document.getElementById('hdt'+i).textContent.replace('°C','').trim(),
+    vent:document.getElementById('hvt'+i).textContent.trim()
+  }));
+  voy.entries.push({ts,v,co,pos,outDry,outWet,outDP,outRH,weather,holds});
+  document.getElementById('lconf').style.display='block';
+  setTimeout(()=>document.getElementById('lconf').style.display='none',3000);
+  saveLocal(); updLogStats(); renderEntries();
+  showToast('Entry #'+voy.entries.length+' saved to '+voy.name);
+}
+function updLogStats(){
+  const voy=getCurrentVoy();
+  if(!voy||!voy.entries.length){document.getElementById('lstats').style.display='none';return;}
+  document.getElementById('lstats').style.display='block';
+  const e=voy.entries[voy.entries.length-1];
+  document.getElementById('lsc').textContent=voy.entries.length;
+  document.getElementById('lsv').textContent=voy.vessel||e.v||'—';
+  document.getElementById('lsvoy').textContent=voy.name;
+  document.getElementById('lsco').textContent=e.co;
+}
+function renderEntries(){
+  const el=document.getElementById('lentries');
+  const voy=getCurrentVoy();
+  if(!voy){el.innerHTML='<div class="empty-state"><div class="es-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20a2 2 0 004 0m0 0a2 2 0 004 0m0 0a2 2 0 004 0m0 0a2 2 0 004 0"/><path d="M12 3v10"/><path d="M4 17l2-10h12l2 10"/><path d="M9 7h6"/></svg></div><div class="es-title">No voyage selected</div><div class="es-sub">Select a voyage above or create a new one to get started</div></div>';return;}
+  if(!voy.entries.length){el.innerHTML='<div style="text-align:center;padding:2rem 1rem;color:var(--txt2);font-size:13px;background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r2)">No entries yet for <strong style="color:var(--teal)">'+voy.name+'</strong>.<br><span style="font-size:12px">Go to Calculator → enter readings → tap <strong style="color:var(--teal)">Add to Voyage Log</strong></span></div>';return;}
+  el.innerHTML=[...voy.entries].reverse().map((e,ri)=>{
+    const idx=voy.entries.length-1-ri;
+    const vC=e.holds.filter(h=>h.vent.includes('Ventilate')).length;
+    const nC=e.holds.filter(h=>h.vent.includes('No Vent')).length;
+    const cC=e.holds.filter(h=>h.vent.includes('Monitor')||h.vent.includes('Hi RH')).length;
+    let bb='rgba(255,255,255,.03)',bc='var(--txt2)',bt='Mixed / Partial data';
+    if(nC>0&&vC===0){bb='rgba(232,64,64,.08)';bc='var(--red)';bt='⛔ DO NOT VENTILATE';}
+    else if(vC>0&&nC===0){bb='rgba(34,197,94,.07)';bc='var(--green)';bt=' VENTILATE — Conditions favourable';}
+    else if(vC>0&&nC>0){bb='rgba(240,165,0,.07)';bc='var(--amber)';bt='⚠ MIXED — Check hold-by-hold';}
+    const rows=e.holds.map((h,i)=>{
+      let vb='rgba(255,255,255,.04)',vc='var(--txt2)';
+      if(h.vent.includes('Ventilate')){vb='var(--green-dim)';vc='var(--green)';}
+      else if(h.vent.includes('No Vent')){vb='var(--red-dim)';vc='var(--red)';}
+      else if(h.vent.includes('Monitor')||h.vent.includes('Hi RH')){vb='var(--amber-dim)';vc='var(--amber)';}
+      const rh=parseFloat(h.rh);const rc=rh>=60?'var(--red)':rh>=50?'var(--amber)':rh>0?'var(--green)':'var(--txt2)';const hasD=!!h.dry;
+      return '<tr><td style="padding:5px 8px;color:var(--teal);font-weight:700;white-space:nowrap">H'+(i+1)+'</td>'
+        +'<td style="padding:5px 8px;color:var(--txt2);font-size:10px">'+(h.cargo||'—')+'</td>'
+        +'<td style="padding:5px 8px;font-family:monospace;font-size:10px">'+(h.dry||'—')+(h.dry?'°C':'')+'</td>'
+        +'<td style="padding:5px 8px;font-family:monospace;font-size:10px">'+(h.wet||'—')+(h.wet?'°C':'')+'</td>'
+        +'<td style="padding:5px 8px;font-family:monospace;font-size:10px;color:'+rc+'">'+(hasD?h.rh+'%':'—')+'</td>'
+        +'<td style="padding:5px 8px;font-family:monospace;font-size:10px;color:var(--teal)">'+(hasD?h.dp+'°C':'—')+'</td>'
+        +'<td style="padding:5px 8px;font-family:monospace;font-size:10px;font-weight:700">'+(hasD?h.delta+'°C':'—')+'</td>'
+        +'<td style="padding:5px 6px">'+(hasD?'<span style="display:inline-block;padding:2px 7px;border-radius:100px;font-size:9px;font-weight:700;background:'+vb+';color:'+vc+'">'+h.vent+'</span>':'<span style="color:var(--txt2);font-size:9px">Empty</span>')+'</td>'
+        +'</tr>';
+    }).join('');
+    const wea=e.weather||{};const weaTxt=[wea.beaufort,wea.vis,wea.prec,wea.susp?'Vent suspended: '+wea.susp:''].filter(Boolean).join(' · ');
+    return '<div class="log-entry">'
+      +'<div class="le-hdr"><div class="le-meta"><span class="le-num">ENTRY '+(idx+1)+'</span><span class="le-ts">'+e.ts+'</span></div>'
+      +'<button onclick="delEntry(\''+voy.id+'\','+idx+')" class="btn btn-danger btn-sm">Del</button>'
+      +'<div class="le-info">C/O: '+e.co+(e.pos!=='—'?' · '+e.pos:'')+'</div></div>'
+      +'<div class="le-outside"><span style="color:var(--txt2)">Outside:</span>'
+      +'<span>Dry <strong>'+(e.outDry||'—')+'°C</strong></span>'
+      +'<span>Wet <strong>'+(e.outWet||'—')+'°C</strong></span>'
+      +'<span>DP <strong style="color:var(--teal)">'+(e.outDP||'—')+'°C</strong></span>'
+      +'<span>RH <strong>'+(e.outRH||'—')+'%</strong></span>'
+      +'<div style="margin-left:auto;display:flex;gap:4px">'
+      +'<span class="stat-chip" style="background:var(--green-dim);color:var(--green)">'+vC+'</span>'
+      +'<span class="stat-chip" style="background:var(--red-dim);color:var(--red)">'+nC+'</span>'
+      +(cC?'<span class="stat-chip" style="background:var(--amber-dim);color:var(--amber)">⚠'+cC+'</span>':'')
+      +'</div></div>'
+      +(weaTxt?'<div class="le-weather"> '+weaTxt+'</div>':'')
+      +'<div class="le-banner" style="background:'+bb+';color:'+bc+'">'+bt+'</div>'
+      +'<div class="le-tbl"><table class="le-t"><thead><tr><th>Hold</th><th>Cargo</th><th>Dry</th><th>Wet</th><th>RH%</th><th>DP</th><th>Delta</th><th>Decision</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+      +'</div>';
+  }).join('');
+}
+function delEntry(voyId, idx){
+  const voy=voyages.find(v=>v.id===voyId); if(!voy) return;
+  if(!confirm('Delete Entry '+(idx+1)+'?')) return;
+  voy.entries.splice(idx,1);
+  saveLocal(); renderEntries(); updLogStats(); showToast('Entry deleted','var(--red)');
+}
+function clearLog(){
+  const voy=getCurrentVoy(); if(!voy||!voy.entries.length) return;
+  if(!confirm('Delete all '+voy.entries.length+' entries from '+voy.name+'?')) return;
+  voy.entries=[]; saveLocal(); renderEntries(); updLogStats();
+}
+
+// ══════════════════════════════════════════════
+// TREND CHART
+// ══════════════════════════════════════════════
+function buildChartPage(){
+  const el=document.getElementById('chartPageContent');
+  const voy=getCurrentVoy();
+  if(!voy||!voy.entries.length){
+    el.innerHTML='<p style="color:var(--txt2);font-size:13px;margin-top:1rem">No entries yet in the current voyage. Add log entries from the Calculator tab.</p>';return;
+  }
+  el.innerHTML=`
+    <div class="eyebrow">DP Delta Over Time</div>
+    <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:.85rem">Trend Chart</h2>
+    <div class="chart-wrap">
+      <div class="chart-ctrl">
+        <label>Hold:</label>
+        <select id="chartHold" onchange="drawChart()">
+          ${Array.from({length:HOLDS},(_,i)=>'<option value="'+i+'">Hold '+(i+1)+'</option>').join('')}
+        </select>
+        <label style="margin-left:.5rem">Show last:</label>
+        <select id="chartCount" onchange="drawChart()">
+          <option value="10">10 entries</option>
+          <option value="20">20 entries</option>
+          <option value="50">All</option>
+        </select>
+      </div>
+      <canvas id="trendChart" height="220"></canvas>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:.65rem;font-size:11px">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:16px;height:3px;background:var(--teal);display:inline-block;border-radius:2px"></span>Outside DP</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:16px;height:3px;background:var(--green);display:inline-block;border-radius:2px"></span>Hold DP</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:16px;height:3px;background:var(--amber);display:inline-block;border-radius:2px;border-top:2px dashed var(--amber)"></span>DP Delta</span>
+      </div>
+    </div>
+    <div class="rbox" style="margin-top:.75rem"><p>When the Hold DP line falls BELOW the Outside DP line, stop ventilation immediately. DP Delta going negative = condensation risk rising.</p></div>
+  `;
+  setTimeout(drawChart, 100);
+}
+function drawChart(){
+  const voy=getCurrentVoy(); if(!voy||!voy.entries.length) return;
+  const canvas=document.getElementById('trendChart'); if(!canvas) return;
+  const holdIdx=parseInt(document.getElementById('chartHold').value)||0;
+  const countVal=parseInt(document.getElementById('chartCount').value)||10;
+  const allEntries=voy.entries;
+  const entries=countVal>=50?allEntries:allEntries.slice(-countVal);
+  const outDPs=entries.map(e=>parseFloat(e.outDP)||null);
+  const holdDPs=entries.map(e=>{const h=e.holds[holdIdx];return h&&h.dp?parseFloat(h.dp):null;});
+  const deltas=entries.map((e,i)=>{const o=outDPs[i],h=holdDPs[i];return(o!==null&&h!==null)?Math.round((h-o)*10)/10:null;});
+  const labels=entries.map((_,i)=>'E'+(allEntries.length-entries.length+i+1));
+  const W=canvas.offsetWidth||300, H=220;
+  canvas.width=W*window.devicePixelRatio; canvas.height=H*window.devicePixelRatio;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d'); ctx.scale(window.devicePixelRatio,window.devicePixelRatio);
+  const allVals=[...outDPs,...holdDPs,...deltas].filter(v=>v!==null);
+  const minV=Math.min(...allVals)-2, maxV=Math.max(...allVals)+2;
+  const pad={t:20,r:15,b:35,l:38};
+  const pw=W-pad.l-pad.r, ph=H-pad.t-pad.b;
+  function toY(v){return pad.t+ph-(((v-minV)/(maxV-minV))*ph);}
+  function toX(i){return pad.l+(i/(entries.length-1||1))*pw;}
+  // Background
+  ctx.fillStyle='rgba(0,0,0,.0)'; ctx.fillRect(0,0,W,H);
+  // Zero line
+  const z=toY(0);
+  ctx.strokeStyle='rgba(255,255,255,.08)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(pad.l,z); ctx.lineTo(pad.l+pw,z); ctx.stroke(); ctx.setLineDash([]);
+  // Grid lines
+  ctx.strokeStyle='rgba(255,255,255,.05)'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad.t+i*(ph/4);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+pw,y);ctx.stroke();}
+  // Y labels
+  ctx.fillStyle='rgba(143,163,189,.7)'; ctx.font='9px Inter,sans-serif'; ctx.textAlign='right';
+  for(let i=0;i<=4;i++){const v=minV+(maxV-minV)*(1-i/4);ctx.fillText(v.toFixed(1),pad.l-4,pad.t+i*(ph/4)+3);}
+  // X labels
+  ctx.textAlign='center'; ctx.fillStyle='rgba(143,163,189,.7)';
+  labels.forEach((l,i)=>{if(entries.length<=10||i%(Math.ceil(entries.length/8))===0)ctx.fillText(l,toX(i),H-pad.b+13);});
+  // Draw line
+  function drawLine(data,color,dashed){
+    ctx.strokeStyle=color; ctx.lineWidth=2;
+    if(dashed) ctx.setLineDash([5,3]); else ctx.setLineDash([]);
+    ctx.beginPath(); let started=false;
+    data.forEach((v,i)=>{if(v===null)return;const x=toX(i),y=toY(v);if(!started){ctx.moveTo(x,y);started=true;}else ctx.lineTo(x,y);});
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  drawLine(outDPs,'rgba(0,212,170,.9)',false);
+  drawLine(holdDPs,'rgba(34,197,94,.9)',false);
+  drawLine(deltas,'rgba(240,165,0,.8)',true);
+  // Dots
+  function drawDots(data,color){
+    ctx.fillStyle=color;
+    data.forEach((v,i)=>{if(v===null)return;ctx.beginPath();ctx.arc(toX(i),toY(v),3,0,Math.PI*2);ctx.fill();});
+  }
+  drawDots(outDPs,'rgba(0,212,170,1)');
+  drawDots(holdDPs,'rgba(34,197,94,1)');
+  drawDots(deltas,'rgba(240,165,0,1)');
+}
+
+// ══════════════════════════════════════════════
+// DEW POINT TABLE
+// ══════════════════════════════════════════════
+function buildDPTable(){
+  const el=document.getElementById('dpTableContent');
+  // Sprung formula dp table
+  const depressions=[0,.2,.4,.6,.8,1,1.2,1.4,1.6,1.8,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9];
+  const dryBulbs=[];
+  for(let t=-2;t<=40;t+=1) dryBulbs.push(t);
+  let html='<div class="eyebrow" style="margin-bottom:.5rem">Psychrometric Reference</div>';
+  html+='<h2 style="font-size:1.1rem;font-weight:800;margin-bottom:.5rem">Dew Point Table</h2>';
+  html+='<p style="color:var(--txt2);font-size:12px;margin-bottom:.85rem">Cross-reference Dry Bulb (left) with Depression (top) to find Dew Point °C. <strong style="color:var(--txt)">Depression = Dry Bulb − Wet Bulb.</strong></p>';
+  html+='<div class="blk" style="margin-bottom:.75rem">';
+  html+='<div style="display:flex;gap:.75rem;flex-wrap:wrap;font-size:12px;color:var(--txt2)">';
+  html+='<span><span style="display:inline-block;width:10px;height:10px;background:rgba(34,197,94,.3);border-radius:2px;margin-right:4px"></span>DP &gt; 10°C</span>';
+  html+='<span><span style="display:inline-block;width:10px;height:10px;background:rgba(240,165,0,.25);border-radius:2px;margin-right:4px"></span>DP 0–10°C</span>';
+  html+='<span><span style="display:inline-block;width:10px;height:10px;background:rgba(59,130,246,.2);border-radius:2px;margin-right:4px"></span>DP &lt; 0°C</span>';
+  html+='</div></div>';
+  html+='<div class="dp-tbl-wrap"><table class="dp-tbl"><thead><tr><th class="dry-col">Dry°C \\ Dep°C</th>';
+  depressions.forEach(d=>html+='<th>'+d.toFixed(d%1?1:0)+'</th>');
+  html+='</tr></thead><tbody>';
+  dryBulbs.forEach(dry=>{
+    html+='<tr><td class="dry-col">'+dry+'</td>';
+    depressions.forEach(dep=>{
+      const wet=dry-dep;
+      const r=dpCalc(dry,wet);
+      if(!r){html+='<td style="color:var(--txt3)">—</td>';return;}
+      let cls='';
+      if(r.dp>10)cls='dp-hi'; else if(r.dp>0)cls='dp-mid'; else cls='dp-lo';
+      html+='<td class="'+cls+'">'+r.dp.toFixed(1)+'</td>';
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table></div>';
+  el.innerHTML=html;
+}
+
+// ══════════════════════════════════════════════
+// CARGO REFERENCE
+// ══════════════════════════════════════════════
+const CARGO_DATA=[
+  {icon:'',name:'Steel Products',rule:'Dew Point Rule',hyg:false,gas:false,o2:false,rh:'Keep RH <60%. Rust starts 40-60%, accelerates exponentially >60%.',tip:'Record steel cargo temperature at loading. Consider portable heaters in cold weather to prevent flash condensation at warm disport. Note if surface rust present at loading — clause B/L accordingly.',vent:'Ventilate as per DP rule. Use dehumidifier if RH cannot be controlled.',claim:'High-value claims common. Incomplete ventilation logs = no defence.'},
+  {icon:'',name:'Pulp / Paper',rule:'Dew Point Rule',hyg:true,gas:'May evolve',o2:'May deplete',rh:'Moisture-sensitive. Even small amounts of sweat cause serious damage.',tip:'High-grade dissolving pulp may have strict moisture content limits — check shipper instructions. Cover top tier with polyethylene sheets if dehumidification is aggressive.',vent:'Ventilate as per DP rule. Avoid sweating at all costs.',claim:'Paper cargo very sensitive — claims arise quickly from condensation.'},
+  {icon:'',name:'Logs / Timber',rule:'Safety First',hyg:false,gas:'Yes — evolve gases',o2:'Yes — depletes O₂',rh:'Mould risk if RH ≥ 70% for prolonged periods.',tip:'ALWAYS check O₂ and toxic gas levels before entering hold. Logs emit CO₂ and other gases that displace oxygen. Ventilate to remove gas build-up, not for moisture control.',vent:'Ventilate to remove gas build-up. Follow shipper instructions if any.',claim:'O₂ depletion is primary safety hazard. Document all hold entries and gas checks.'},
+  {icon:'⚫',name:'Coal',rule:'Natural Vent Only',hyg:false,gas:'Yes — flammable',o2:'May deplete',rh:'Monitor for spontaneous combustion risk in high-temperature holds.',tip:'NEVER use mechanical blowers with coal — sparks can ignite gases. Use coal vents (natural ventilation) only. Monitor hold temperatures. Check for CH₄ (methane) before entry.',vent:'Natural ventilation only. Surface vents open. NO mechanical blowers — spark risk.',claim:'Self-heating and gas explosion risk. Document all vent actions and temperatures.'},
+  {icon:'',name:'Grain / Oilseed',rule:'3-Degree Rule',hyg:true,gas:'Fumigant residues',o2:'May deplete',rh:'High moisture content grain can self-heat. Target RH <70%.',tip:'If fumigated during voyage (aluminium phosphide), no ventilation for stipulated period. After fumigation, ventilate per 3-degree or DP rule. Mould develops rapidly >70% RH.',vent:'3-Degree Rule primarily. DP rule if hygrometers available. Ventilate to prevent mould.',claim:'Caking and mould claims common. Fumigation periods must be documented.'},
+  {icon:'',name:'Sugar (Bagged)',rule:'Dew Point Rule',hyg:true,gas:false,o2:false,rh:'Caking begins when moisture contacts sugar surface. Even small amounts cause damage.',tip:'Never ventilate when outside DP is higher than hold DP — classic cargo sweat scenario. A USD 1M+ claim was settled due to improper ventilation of sugar cargo (Gard P&I case).',vent:'Strict DP rule. No visual assessment — always measure dew point before ventilating.',claim:'Cargo sweat causes caking and rejection at port. Very high claim values.'},
+  {icon:'',name:'Aluminium',rule:'Dew Point Rule',hyg:false,gas:false,o2:false,rh:'Aluminium itself not moisture sensitive, but lifting slings/straps rust rapidly.',tip:'Focus ventilation on preventing rust of steel lifting bands and straps. Be mindful of season changes when crossing equator — hot→cold or cold→hot transitions require DP recalculation.',vent:'Ventilate as per DP rule. Goal is to protect lifting equipment from rust.',claim:'Claims arise from rust damage to lifting bands making cargo unsaleable/dangerous.'},
+  {icon:'⛏',name:'Concentrates',rule:'IMSBC Code',hyg:false,gas:'Check IMSBC',o2:'Check IMSBC',rh:'Wet weather can critically affect moisture content — may liquefy.',tip:'Wet weather dramatically affects moisture content. Check IMSBC code for specific requirements. Some concentrates emit flammable gases — check before using blowers. This is safety-critical.',vent:'Ventilate per IMSBC code and shipper instructions. Check gas levels before using blowers.',claim:'Liquefaction risk in wet weather. Gas ignition risk. IMSBC compliance essential.'},
+];
+function buildCargoRef(){
+  const el=document.getElementById('cargoContent');
+  el.innerHTML='<div class="eyebrow" style="margin-bottom:.5rem">Cargo Quick Reference</div>'
+    +'<h2 style="font-size:1.1rem;font-weight:800;margin-bottom:1rem">8 Common Cargo Types</h2>'
+    +CARGO_DATA.map(c=>`
+    <div class="cargo-card">
+      <div class="cc-hdr"><div class="cc-icon">${c.icon}</div><div><div class="cc-name">${c.name}</div><div class="cc-rule" style="color:var(--teal)">${c.rule}</div></div></div>
+      <div class="cc-grid">
+        <div class="cc-key">Hygroscopic</div><div class="cc-val">${c.hyg?'<span style="color:var(--amber)">Yes</span>':'No'}</div>
+        <div class="cc-key">Gas Risk</div><div class="cc-val">${c.gas?'<span style="color:var(--red)">'+(c.gas===true?'Yes':c.gas)+'</span>':'No'}</div>
+        <div class="cc-key">O₂ Risk</div><div class="cc-val">${c.o2?'<span style="color:var(--red)">'+(c.o2===true?'Yes':c.o2)+'</span>':'No'}</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:8px;padding:.65rem .85rem;font-size:11px;color:var(--txt2);line-height:1.6;margin-bottom:.6rem"><strong style="color:var(--txt)">RH Note:</strong> ${c.rh}</div>
+      <div style="background:var(--bg3);border-radius:8px;padding:.65rem .85rem;font-size:11px;color:var(--txt2);line-height:1.6;margin-bottom:.6rem"><strong style="color:var(--txt)">Ventilation:</strong> ${c.vent}</div>
+      <div style="background:rgba(232,64,64,.06);border:1px solid rgba(232,64,64,.15);border-radius:8px;padding:.65rem .85rem;font-size:11px;color:var(--txt2);line-height:1.6"><strong style="color:var(--red)">⚠ Claims:</strong> ${c.claim}</div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+// VENTILATION GUIDE
+// ══════════════════════════════════════════════
+function buildGuide(){
+  document.getElementById('guideContent').innerHTML=`
+  <div class="eyebrow">Procedures & Rules</div>
+  <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:.85rem">Ventilation Guide</h2>
+
+  <div class="card" style="margin-bottom:.85rem">
+    <div class="eyebrow">Quick DP Calculator</div>
+    <div class="g2" style="margin-bottom:.65rem">
+      <div class="fld"><label>Dry Bulb °C</label><input type="number" id="qdry" placeholder="20" step="0.5" inputmode="decimal" oninput="qCalc()"></div>
+      <div class="fld"><label>Wet Bulb °C</label><input type="number" id="qwet" placeholder="16" step="0.5" inputmode="decimal" oninput="qCalc()"></div>
+    </div>
+    <div class="g2">
+      <div class="res-box"><span class="rl">Dew Point</span><span class="rv" id="qdp">—</span></div>
+      <div class="res-box"><span class="rl">RH</span><span class="rv" id="qrh">—</span></div>
+    </div>
+  </div>
+
+  <div class="sh"><h2>Measuring Dew Point</h2></div>
+  <ul class="steps">
+    <li><div class="sn">1</div><div>Use a <strong style="color:var(--txt)">sling hygrometer (psychrometer)</strong> to take dry and wet bulb readings.</div></li>
+    <li><div class="sn">2</div><div>Always measure at the <strong style="color:var(--txt)">exhaust of the cargo hold</strong> — exhaust air represents actual hold conditions.</div></li>
+    <li><div class="sn">3</div><div>Depression = Dry − Wet. Enter into Calculator — DP and RH calculate automatically.</div></li>
+    <li><div class="sn">4</div><div>Record in the Voyage Log <strong style="color:var(--txt)">at least twice daily.</strong> This is your legal protection.</div></li>
+  </ul>
+
+  <hr class="div">
+  <div class="sh"><h2>Surface Ventilation</h2></div>
+  <div class="grid2">
+    <div><div class="pill pill-teal" style="margin-bottom:.65rem">Good Weather · Daytime</div>
+    <ul class="steps">
+      <li><div class="sn">1</div><div>Open vent flaps fore & aft of hatch lid — 2 or 3 each end.</div></li>
+      <li><div class="sn">2</div><div>Daylight hours ONLY — approx 06:00 to 17:00.</div></li>
+      <li><div class="sn">3</div><div>Good weather — no sea spray on deck.</div></li>
+      <li><div class="sn">4</div><div>Outside DP must be LOWER than hold DP.</div></li>
+      <li><div class="sn">5</div><div>Close ALL vents at night and in bad weather.</div></li>
+    </ul></div>
+    <div><div class="pill pill-amber" style="margin-bottom:.65rem">Bad Weather / Night</div>
+    <ul class="steps">
+      <li><div class="sn">1</div><div>Close all hatch lid coal vents.</div></li>
+      <li><div class="sn">2</div><div>Run blowers — push air through forward vent flap on forward bulkhead.</div></li>
+      <li><div class="sn">3</div><div>Exhaust exits through aft vent flap on aft bulkhead.</div></li>
+      <li><div class="sn">4</div><div>Only if outside DP remains lower than hold DP.</div></li>
+    </ul></div>
+  </div>
+
+  <hr class="div">
+  <div class="sh"><h2>Log Requirements — Twice Daily</h2></div>
+  <div class="rbox danger"><p>The ventilation log is your PRIMARY legal defence. Missing entries = impossible to defend claims in court, even if ventilation was correct.</p></div>
+  <div class="card" style="margin-top:.75rem">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem 1rem;font-size:12px">
+      <div><div style="color:var(--teal);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.35rem">Required</div><div style="color:var(--txt2);line-height:2">Date & Time<br>Hold Number<br>Dry Bulb<br>Wet Bulb</div></div>
+      <div><div style="color:var(--teal);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.35rem">Calculated</div><div style="color:var(--txt2);line-height:2">Dew Point<br>Relative Humidity<br>DP Delta<br>Vent Status</div></div>
+      <div><div style="color:var(--teal);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.35rem">Observations</div><div style="color:var(--txt2);line-height:2">Sea temperature<br>Weather/sea state<br>Condensation<br>Cargo condition</div></div>
+      <div><div style="color:var(--teal);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.35rem">Time Records</div><div style="color:var(--txt2);line-height:2">Vent started<br>Vent stopped<br>Reason stopped<br>Bad weather periods</div></div>
+    </div>
+  </div>`;
+}
+function qCalc(){
+  const r=dpCalc(parseFloat(document.getElementById('qdry').value),parseFloat(document.getElementById('qwet').value));
+  document.getElementById('qdp').textContent=r?r.dp.toFixed(1)+'°C':'—';
+  document.getElementById('qrh').textContent=r?r.rh+'%':'—';
+}
+
+// ══════════════════════════════════════════════
+// KNOWLEDGE BASE
+// ══════════════════════════════════════════════
+function buildKB(){
+  document.getElementById('kbContent').innerHTML=`
+  <div class="eyebrow">Industry Research</div>
+  <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:1rem">Knowledge Base</h2>
+
+  <div class="grid4" style="margin-bottom:1rem">
+    <div class="card" style="text-align:center;border-color:rgba(232,64,64,.2)"><div style="font-size:1.6rem;font-weight:800;color:var(--red)">#1</div><div style="font-size:11px;color:var(--txt2);margin-top:3px">Condensation is top cause of wet cargo damage</div></div>
+    <div class="card" style="text-align:center;border-color:rgba(240,165,0,.2)"><div style="font-size:1.6rem;font-weight:800;color:var(--amber)">$1M+</div><div style="font-size:11px;color:var(--txt2);margin-top:3px">Typical cargo sweat claim settlement</div></div>
+    <div class="card" style="text-align:center;border-color:rgba(59,130,246,.2)"><div style="font-size:1.6rem;font-weight:800;color:var(--blue)">2×</div><div style="font-size:11px;color:var(--txt2);margin-top:3px">Minimum hold inspections per day</div></div>
+    <div class="card" style="text-align:center;border-color:rgba(34,197,94,.2)"><div style="font-size:1.6rem;font-weight:800;color:var(--green)">60%</div><div style="font-size:11px;color:var(--txt2);margin-top:3px">RH threshold for exponential steel rust</div></div>
+  </div>
+
+  <div class="sh"><h2>Case Studies</h2></div>
+
+  <div style="background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r2);overflow:hidden;margin-bottom:.85rem">
+    <div style="padding:.85rem 1rem;border-bottom:1px solid var(--brd);display:flex;gap:7px;flex-wrap:wrap"><span class="pill pill-red">Case 01</span><span class="pill pill-amber">Steel · Log Gaps</span></div>
+    <div style="padding:1rem"><p style="color:var(--txt2);font-size:12px;line-height:1.7;margin-bottom:.5rem"><strong style="color:var(--txt)">Scenario:</strong> Steel coils loaded in East Asia for Australia. Vessel correctly applied "cold to hot, ventilate not" — but the ventilation log had gaps of multiple watches with no entries.</p><p style="color:var(--txt2);font-size:12px;line-height:1.7;margin-bottom:.5rem"><strong style="color:var(--txt)">Outcome:</strong> P&I club could not defend the claim despite correct physical ventilation. Incomplete records meant no legal defence. Claim settled against shipowner.</p><p style="color:var(--txt2);font-size:12px;line-height:1.7"><strong style="color:var(--red)">Lesson:</strong> A correct action with no record is the same as no action in court. Log every watch.</p><a href="https://maritimesafetyinnovationlab.org/wp-content/uploads/2021/02/INTERCARGO-Cargo-Ventilation-Guide-2020_11.pdf" target="_blank" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--teal);font-weight:600;text-decoration:none;margin-top:.65rem">Read INTERCARGO guide →</a></div>
+  </div>
+
+  <div style="background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r2);overflow:hidden;margin-bottom:.85rem">
+    <div style="padding:.85rem 1rem;border-bottom:1px solid var(--brd);display:flex;gap:7px;flex-wrap:wrap"><span class="pill pill-red">Case 02</span><span class="pill pill-amber">Sugar · USD 1M+ Claim</span><span style="margin-left:auto;font-size:10px;color:var(--txt2)">Gard P&I</span></div>
+    <div style="padding:1rem"><p style="color:var(--txt2);font-size:12px;line-height:1.7;margin-bottom:.5rem"><strong style="color:var(--txt)">Scenario:</strong> Full cargo of bagged sugar. Crew ventilated using visual weather assessment — "it seemed dry outside" — with no dew point measurements taken.</p><p style="color:var(--txt2);font-size:12px;line-height:1.7;margin-bottom:.5rem"><strong style="color:var(--txt)">Outcome:</strong> Extensive cargo sweat, serious caking, cargo rejected. Settled for <strong style="color:var(--red)">over USD 1 million.</strong></p><p style="color:var(--txt2);font-size:12px;line-height:1.7"><strong style="color:var(--red)">Lesson:</strong> Visual assessment is NOT a substitute for measuring dew point. Air can be fully saturated and look completely clear.</p><a href="https://gard.no/insights/dont-work-up-a-sweat/" target="_blank" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--teal);font-weight:600;text-decoration:none;margin-top:.65rem">Read Gard's analysis →</a></div>
+  </div>
+
+  <div style="background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r2);overflow:hidden;margin-bottom:.85rem">
+    <div style="padding:.85rem 1rem;border-bottom:1px solid var(--brd);display:flex;gap:7px;flex-wrap:wrap"><span class="pill pill-red">Case 03</span><span class="pill pill-amber">Soya · Fumigation Conflict</span><span style="margin-left:auto;font-size:10px;color:var(--txt2)">Britannia P&I</span></div>
+    <div style="padding:1rem"><p style="color:var(--txt2);font-size:12px;line-height:1.7;margin-bottom:.5rem"><strong style="color:var(--txt)">Scenario:</strong> Soya beans from Brazil to China. Fumigated with aluminium phosphide — holds sealed for 10 days. After fumigation, crew ventilated correctly per the Three Degree Rule.</p><p style="color:var(--txt2);font-size:12px;line-height:1.7"><strong style="color:var(--red)">Lesson:</strong> Fumigation overrides ventilation rules entirely. When holds are sealed, document this as the reason ventilation was suspended — not as a failure to ventilate.</p><a href="https://britanniapandi.com/wp-content/uploads/2025/02/Britannia-Loss-Prevention-Insight-Essential-Guide-To-Understanding-Cargo-Ventilation.pdf" target="_blank" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--teal);font-weight:600;text-decoration:none;margin-top:.65rem">Read Britannia's guide →</a></div>
+  </div>
+
+  <div class="sh"><h2>References</h2></div>
+  ${[
+    {icon:'',bg:'rgba(59,130,246,.12)',title:'INTERCARGO / Standard Club / DNV — Cargo & Cargo Hold Ventilation Guide (2020)',sub:'Definitive industry guide. All cargo types, both rules, case studies, regulatory requirements.',url:'https://maritimesafetyinnovationlab.org/wp-content/uploads/2021/02/INTERCARGO-Cargo-Ventilation-Guide-2020_11.pdf'},
+    {icon:'⚠',bg:'rgba(240,165,0,.12)',title:'Gard P&I — "Don\'t Work Up a Sweat"',sub:'Practical guidance on cargo sweat prevention including the USD 1M+ sugar case study.',url:'https://gard.no/insights/dont-work-up-a-sweat/'},
+    {icon:'',bg:'rgba(34,197,94,.12)',title:'Britannia P&I — Cargo Ventilation Logs (2023)',sub:'What the log must contain to successfully defend moisture damage claims.',url:'https://britanniapandi.com/2023/04/cargo-ventilation-logs/'},
+    {icon:'',bg:'rgba(232,64,64,.12)',title:'West of England P&I — Ventilation & Precautions to Minimise Sweat',sub:'Loss prevention bulletin on non-hygroscopic cargoes and legal burden of proof.',url:'https://www.westpandi.com/news-and-resources/loss-prevention-bulletins/cargo-ventilation-and-precautions-to-minimise-swea/'},
+    {icon:'⚓',bg:'rgba(59,130,246,.12)',title:'Skuld P&I — Carriage of Steel Cargoes',sub:'Steel cargo ventilation, moisture damage mechanisms, rust claims and B/L clausing.',url:'https://www.skuld.com/topics/cargo/steel/carriage-of-steel-cargoes/'},
+    {icon:'',bg:'rgba(240,165,0,.12)',title:'Britannia P&I — Essential Guide to Cargo Ventilation (2025)',sub:'Most recent guide with updated case studies on steel, soya and agricultural cargoes.',url:'https://britanniapandi.com/wp-content/uploads/2025/02/Britannia-Loss-Prevention-Insight-Essential-Guide-To-Understanding-Cargo-Ventilation.pdf'},
+  ].map(r=>`<a href="${r.url}" target="_blank" style="display:flex;align-items:center;gap:11px;padding:.85rem 1rem;background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:.6rem;text-decoration:none">
+    <div style="width:34px;height:34px;border-radius:8px;background:${r.bg};display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">${r.icon}</div>
+    <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;color:var(--txt);margin-bottom:2px;line-height:1.4">${r.title}</div><div style="font-size:11px;color:var(--txt2);line-height:1.4">${r.sub}</div></div>
+    <div style="color:var(--txt3);font-size:14px;flex-shrink:0">↗</div>
+  </a>`).join('')}`;
+}
+
+// ══════════════════════════════════════════════
+// QUIZ — 15 QUESTIONS
+// ══════════════════════════════════════════════
+const QUIZ_Q=[
+  {q:"What is the Golden Rule of cargo hold ventilation?",opts:["Ventilate every 4 hours regardless of conditions","Ventilate ONLY when outside dew point ≤ hold dew point","Ventilate whenever outside temperature is lower than hold temperature","Always keep vents open in good weather"],ans:1,explain:"The dew point rule is the fundamental rule. Outside dew point must be LOWER than or EQUAL TO hold dew point for ventilation to be safe. This prevents introducing moisture-laden air into the hold."},
+  {q:"What does a POSITIVE DP Delta (+5.6°C) mean?",opts:["Outside air is more humid — do NOT ventilate","Hold air is more humid than outside — VENTILATE","Dew points are equal — monitor closely","The thermometer reading is incorrect"],ans:1,explain:"DP Delta = Hold DP − Outside DP. A positive value means hold air has a higher dew point (more humid) than outside air. Bringing in the drier outside air will remove moisture from the hold — safe to ventilate."},
+  {q:"A vessel loaded cold steel cargo in Japan and is now sailing to Australia in warm, humid tropical air. What should the Chief Officer do?",opts:["Ventilate boldly to remove condensation","Ventilate only at night when cooler","Do NOT ventilate — cargo sweat will occur","Open all vents to cool the cargo down"],ans:2,explain:"Cold to Hot = DO NOT VENTILATE. The warm, humid outside air will condense directly onto the cold steel cargo (cargo sweat). This is the classic cargo damage scenario."},
+  {q:"What is 'cargo sweat'?",opts:["Condensation forming on the hold bulkheads","Condensation forming on the cargo itself","Seawater leaking through hatch seals","High relative humidity inside the hold"],ans:1,explain:"Cargo sweat is condensation that forms directly on the cargo surface when warm, humid air contacts cold cargo. Ship sweat is condensation on the ship's structure (bulkheads, hatch undersides)."},
+  {q:"At what relative humidity does rust corrosion on steel begin and then accelerate exponentially?",opts:["Begins at 20%, accelerates above 40%","Begins at 40–60%, accelerates exponentially above 60%","Begins at 60%, accelerates above 80%","Begins at 80%, no exponential increase"],ans:1,explain:"Steel corrosion begins noticeably in the 40–60% RH range. Above 60% RH, the corrosion rate accelerates exponentially. This is why RH <60% is the critical threshold for steel cargo holds."},
+  {q:"What is the '3-Degree Rule' and when is it used?",opts:["Ventilate if outside temp is 3°C higher than hold temp — always applicable","Ventilate if outside temp is 3°C LOWER than cargo temperature at loading — used when no hygrometer available","Ventilate for 3 degrees of arc change in vessel heading","Close vents when temperature drops by 3°C"],ans:1,explain:"The 3-Degree Rule is a fallback when dew point cannot be measured (no hygrometer). Ventilate only if outside air temperature is at least 3°C LOWER than the average cargo temperature recorded at loading. Used primarily for hygroscopic cargo."},
+  {q:"How often should hold conditions be recorded in the ventilation log?",opts:["Once per day","At least twice daily","Once per voyage leg","Only when condensation is observed"],ans:1,explain:"Industry standard and regulatory guidance require hold inspections and log entries at least twice daily. Gard P&I also recommends recording at least once per watch if the dew point rule is being applied."},
+  {q:"Why is the ventilation log critically important from a legal standpoint?",opts:["It is only required if cargo damage occurs","It is the primary legal defence against cargo damage claims in P&I proceedings","It is required only for steel cargoes","It replaces the need for cargo insurance"],ans:1,explain:"The ventilation log is your primary legal defence. P&I clubs have consistently shown that correct ventilation without proper records cannot be defended. 'If it isn't written down, it didn't happen' in maritime law."},
+  {q:"A vessel is sailing through fog with heavy sea spray on deck. What should the Chief Officer do regarding ventilation?",opts:["Continue ventilating — fog has low humidity","Open more vents to improve airflow","CLOSE all vents — sea spray entering holds can cause water damage","Reduce fan speed but keep vents open"],ans:2,explain:"Ventilate only in good weather — without sea spray on deck. Sea spray entering holds can directly wet cargo, cause rust and corrosion, and lead to damage claims. Close all vents in bad weather, fog, or at night."},
+  {q:"What does 'ship sweat' refer to?",opts:["Condensation on the cargo surface","Condensation forming on the ship's structure inside the hold — bulkheads, hatch undersides","The crew's perspiration in hot conditions","Seawater sweating through rust spots"],ans:1,explain:"Ship sweat forms on the ship's structure (hold bulkheads, underside of hatch covers) rather than on the cargo. It then drips onto cargo below, causing damage. Common when warm, humid air enters a hold with cold metal surfaces."},
+  {q:"Coal cargo emits flammable gases. What type of ventilation should ONLY be used?",opts:["Mechanical blowers — they are most efficient","Dehumidifier — removes gases safely","Natural ventilation through coal vents ONLY — never use blowers","Forced ventilation at maximum capacity"],ans:2,explain:"Coal emits flammable gases (primarily methane). Mechanical blowers create sparks that can ignite these gases. Only natural ventilation through coal vents (gravity/wind driven) is safe for coal cargo. Always check gas levels before entering the hold."},
+  {q:"A cargo of soya beans has been fumigated with aluminium phosphide and hatches must be sealed for 10 days. A surveyor later queries why there are no ventilation log entries during this period. What is the correct response?",opts:["Admit that ventilation was neglected","The log entries were lost","The ventilation was correctly suspended during the fumigation period — this should have been documented in the log as the reason for suspension","Claim the ship was in bad weather the entire time"],ans:2,explain:"Fumigation requirements override ventilation rules. When holds must be sealed for fumigation, ventilation must stop. This is not a failure — it must be documented in the log as the reason ventilation was suspended, so the record is complete and defensible."},
+  {q:"What should be recorded when ventilation is suspended?",opts:["Nothing — simply omit those log entries","The time ventilation stopped and the reason why (weather, night, fumigation, cargo ops)","Only the time ventilation restarted","Only the weather conditions"],ans:1,explain:"When ventilation is suspended, the log must record the time it stopped AND the specific reason: weather (night/bad seas/spray), fumigation, port operations, or other. This is essential for legal defence — it shows you made a conscious, documented decision, not a negligent one."},
+  {q:"Minimum O₂ level required for safe hold entry?",opts:["15%","18%","20.5%","22%"],ans:2,explain:"The minimum safe O₂ level for enclosed space entry is 20.5% (some regulations state 19.5% as the absolute minimum, but 20.5% is the industry standard). Logs, grain, coal, and other cargoes can severely deplete O₂. Always measure before entry — never assume."},
+  {q:"When using the dew point rule, at what point during good weather surface ventilation should you stop and close vents?",opts:["At sunset — always close at night regardless of DP","When outside DP rises to equal or exceed hold DP","When the vessel enters a different time zone","When cargo temperature changes by 5°C"],ans:1,explain:"Both conditions can trigger closure: nightfall (always close at night — natural surface ventilation is daylight-only, 06:00-17:00 approximately) AND when outside dew point rises to equal or exceed hold dew point. Monitor DP continuously and close immediately when the margin disappears."},
+];
+let quizState={idx:0,score:0,answered:false,done:false};
+
+function renderQuiz(){
+  const wrap=document.getElementById('quizWrap');
+  if(quizState.done){renderQuizScore();return;}
+  const q=QUIZ_Q[quizState.idx];
+  wrap.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+      <div style="font-size:12px;color:var(--txt2)">Question ${quizState.idx+1} of ${QUIZ_Q.length}</div>
+      <div style="font-size:12px;font-weight:600;color:var(--green)">Score: ${quizState.score}</div>
+    </div>
+    <div class="quiz-progress"><div class="quiz-bar" style="width:${((quizState.idx)/QUIZ_Q.length*100).toFixed(0)}%"></div></div>
+    <div class="quiz-q">
+      <div class="qn">Question ${quizState.idx+1}</div>
+      <div class="qt">${q.q}</div>
+      ${q.opts.map((o,i)=>`<button class="quiz-opt" id="qopt${i}" onclick="answerQuiz(${i})">${o}</button>`).join('')}
+      <div class="quiz-explain" id="qexplain">${q.explain}</div>
+    </div>
+    <button class="btn btn-primary btn-full" id="qnext" onclick="nextQuiz()" style="display:none">Next Question →</button>
+  `;
+}
+function answerQuiz(chosen){
+  if(quizState.answered) return;
+  quizState.answered=true;
+  const q=QUIZ_Q[quizState.idx];
+  const correct=chosen===q.ans;
+  if(correct) quizState.score++;
+  for(let i=0;i<q.opts.length;i++){
+    const btn=document.getElementById('qopt'+i);
+    if(i===q.ans) btn.classList.add('correct');
+    else if(i===chosen&&!correct) btn.classList.add('wrong');
+    btn.disabled=true;
+  }
+  document.getElementById('qexplain').style.display='block';
+  document.getElementById('qnext').style.display='flex';
+  document.getElementById('qnext').textContent=quizState.idx<QUIZ_Q.length-1?'Next Question →':'See Results';
+}
+function nextQuiz(){
+  quizState.idx++;
+  quizState.answered=false;
+  if(quizState.idx>=QUIZ_Q.length){quizState.done=true;renderQuizScore();return;}
+  renderQuiz();
+}
+function renderQuizScore(){
+  const pct=Math.round(quizState.score/QUIZ_Q.length*100);
+  const msg=pct>=90?'Excellent! Outstanding knowledge.':pct>=70?'Good result. Review the missed questions.':pct>=50?'Passing. Review the ventilation guide.':'Needs improvement. Study the Guide tab.';
+  const col=pct>=90?'var(--green)':pct>=70?'var(--teal)':pct>=50?'var(--amber)':'var(--red)';
+  document.getElementById('quizWrap').innerHTML=`
+    <div class="quiz-score">
+      <div class="qs-num" style="color:${col}">${quizState.score}/${QUIZ_Q.length}</div>
+      <div style="font-size:1.5rem;font-weight:800;color:${col};margin-bottom:.5rem">${pct}%</div>
+      <div class="qs-lbl">${msg}</div>
+      <button class="btn btn-primary btn-full" onclick="quizState={idx:0,score:0,answered:false,done:false};renderQuiz()">Retake Quiz</button>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════
+// LOCALSTORAGE
+// ══════════════════════════════════════════════
+function saveLocal(){
+  try{
+    localStorage.setItem('vc_hd',JSON.stringify(hd));
+    localStorage.setItem('vc_out',JSON.stringify({dry:document.getElementById('odry').value,wet:document.getElementById('owet').value}));
+    localStorage.setItem('vc_voy_fields',JSON.stringify({v:document.getElementById('cv').value,co:document.getElementById('cco').value,date:document.getElementById('cdate').value,time:document.getElementById('ctime').value,pos:document.getElementById('cpos').value}));
+    localStorage.setItem('vc_voyages',JSON.stringify(voyages));
+    localStorage.setItem('vc_curVoy',currentVoyId||'');
+  }catch(e){}
+}
+function loadLocal(){
+  try{
+    const h=localStorage.getItem('vc_hd');
+    if(h){hd=JSON.parse(h);buildTbl();}
+    const o=localStorage.getItem('vc_out');
+    if(o){const p=JSON.parse(o);document.getElementById('odry').value=p.dry||'';document.getElementById('owet').value=p.wet||'';if(p.dry||p.wet)calcOut();}
+    const vf=localStorage.getItem('vc_voy_fields');
+    if(vf){const p=JSON.parse(vf);document.getElementById('cv').value=p.v||'';document.getElementById('cco').value=p.co||'';if(p.date)document.getElementById('cdate').value=p.date;if(p.time)document.getElementById('ctime').value=p.time;document.getElementById('cpos').value=p.pos||'';}
+    const vs=localStorage.getItem('vc_voyages');
+    if(vs)voyages=JSON.parse(vs);
+    currentVoyId=localStorage.getItem('vc_curVoy')||null;
+    rebuildVoySelect();renderVoyList();renderEntries();updLogStats();
+  }catch(e){}
+}
+function clearAll(){
+  document.getElementById('odry').value='';document.getElementById('owet').value='';
+  document.getElementById('odp').textContent='—';document.getElementById('orh').textContent='—';
+  hd=Array(HOLDS).fill(null).map(()=>({dry:'',wet:'',cargo:'',notes:''}));
+  buildTbl();updSum();updRisk();saveLocal();showToast('Calculator cleared');
+}
+function loadDemo(){
+  document.getElementById('odry').value=15;document.getElementById('owet').value=11;calcOut();
+  const dm=[{d:19,w:16,c:'Steel coils'},{d:20,w:16,c:'Steel coils'},{d:'',w:'',c:'Empty'},{d:20,w:16,c:'Steel pipes'},{d:20,w:20,c:'BKP'},{d:20,w:17,c:'Steel coils'},{d:22,w:18,c:'Steel coils'},{d:'',w:'',c:'Empty'},{d:22,w:17,c:'Steel coils'},{d:22,w:19,c:'Steel coils'}];
+  dm.forEach((x,i)=>{hd[i]={dry:x.d,wet:x.w,cargo:x.c,notes:''};document.getElementById('hdy'+i).value=x.d;document.getElementById('hwt'+i).value=x.w;document.getElementById('hc'+i).value=x.c;updHold(i);});
+  updSum();updRisk();showToast('Demo data loaded');
+}
+
+// ══════════════════════════════════════════════
+// EXPORT MODAL
+// ══════════════════════════════════════════════
+let expCtx='calc';
+function openModal(ctx){
+  expCtx=ctx;
+  const voy=getCurrentVoy();
+  document.getElementById('mtitle').textContent=ctx==='calc'?'Hold Condition Report':'Voyage Log Export';
+  document.getElementById('mdesc').textContent=ctx==='calc'?'Export current hold data with all readings and decisions.':(voy?'Export all '+voy.entries.length+' entries from "'+voy.name+'"':'No voyage selected.');
+  document.getElementById('expstat').style.display='none';
+  document.getElementById('expmodal').style.display='flex';
+}
+function closeModal(){document.getElementById('expmodal').style.display='none';}
+document.getElementById('expmodal').addEventListener('click',e=>{if(e.target===document.getElementById('expmodal'))closeModal();});
+function showStat(msg,ok){
+  const el=document.getElementById('expstat');el.style.display='block';
+  el.style.background=ok?'var(--green-dim)':'var(--red-dim)';el.style.color=ok?'var(--green)':'var(--red)';
+  el.style.border='1px solid '+(ok?'rgba(34,197,94,.3)':'rgba(232,64,64,.3)');
+  el.textContent=msg;if(ok)setTimeout(closeModal,1600);
+}
+function doExp(fmt){
+  try{
+    if(fmt==='txt')expCtx==='calc'?expCalcTXT():expLogTXT();
+    else if(fmt==='xlsx')expCtx==='calc'?expCalcXLSX():expLogXLSX();
+    else if(fmt==='pdf')expCtx==='calc'?expCalcPDF():expLogPDF();
+    showStat(' Download started!',true);
+  }catch(err){showStat('Export failed: '+err.message,false);console.error(err);}
+}
+function snap(){
+  const now=new Date();
+  return{now,
+    vessel:document.getElementById('cv').value||'',voyage:document.getElementById('cvoy').value||'',co:document.getElementById('cco').value||'',
+    obsDate:document.getElementById('cdate').value||now.toLocaleDateString(),obsTime:document.getElementById('ctime').value||'',pos:document.getElementById('cpos').value||'',
+    outDry:document.getElementById('odry').value||'',outWet:document.getElementById('owet').value||'',
+    outDP:document.getElementById('odp').textContent.replace('°C','').trim(),outRH:document.getElementById('orh').textContent.replace('%','').trim(),
+    rows:Array.from({length:HOLDS},(_,i)=>({hold:'Hold '+(i+1),cargo:hd[i].cargo||'',dry:hd[i].dry||'',wet:hd[i].wet||'',
+      rh:document.getElementById('hrh'+i).textContent.replace('%','').trim(),dp:document.getElementById('hdp'+i).textContent.replace('°C','').trim(),
+      delta:document.getElementById('hdt'+i).textContent.replace('°C','').trim(),vent:document.getElementById('hvt'+i).textContent.trim(),notes:hd[i].notes||''}))
+  };
+}
+function dl(content,type,fn){const b=new Blob([content],{type});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fn;a.click();}
+
+function expCalcTXT(){const s=snap();let o='MARINE CARGO VENTILATION LOG\nVessel: '+(s.vessel||'—')+'  Voyage: '+(s.voyage||'—')+'  C/O: '+(s.co||'—')+'\nDate: '+s.obsDate+'  Time: '+(s.obsTime||'—')+'  Pos: '+(s.pos||'—')+'\n'+'='.repeat(72)+'\nOUTSIDE: Dry '+(s.outDry||'—')+'°C  Wet '+(s.outWet||'—')+'°C  DP: '+(s.outDP||'—')+'°C  RH: '+(s.outRH||'—')+'%\n\n';o+='Hold  Cargo           Dry   Wet   RH%   DP°C    Delta   Decision\n'+'-'.repeat(72)+'\n';s.rows.forEach(r=>{o+=(r.hold+'.').padEnd(6)+(r.cargo||'—').substring(0,14).padEnd(16)+(r.dry||'—').padEnd(6)+(r.wet||'—').padEnd(6)+(r.rh||'—').padEnd(6)+(r.dp||'—').padEnd(8)+(r.delta||'—').padEnd(8)+(r.vent||'—')+'\n';});const v=s.rows.filter(r=>r.vent.includes('Ventilate')).length;const n=s.rows.filter(r=>r.vent.includes('No Vent')).length;o+='-'.repeat(72)+'\nSUMMARY: VENTILATE='+v+'  NO VENT='+n+'  OTHER='+(HOLDS-v-n)+'\nDew Point Rule: Ventilate only when outside DP <= hold DP\n';dl(o,'text/plain','ventilation_log_'+s.now.toISOString().slice(0,10)+'.txt');}
+function expLogTXT(){const voy=getCurrentVoy();if(!voy){showToast('No voyage selected','var(--amber)');return;}let o='VOYAGE VENTILATION LOG — '+voy.name+'\n'+'='.repeat(70)+'\n\n';if(!voy.entries.length)o+='No entries.\n';voy.entries.forEach((e,i)=>{o+='ENTRY '+(i+1)+' — '+e.ts+'  Pos: '+(e.pos||'—')+'\nVessel: '+voy.vessel+' C/O: '+e.co+'\nOutside: Dry '+(e.outDry||'—')+'°C  Wet '+(e.outWet||'—')+'°C  DP: '+(e.outDP||'—')+'°C  RH: '+(e.outRH||'—')+'%\n';const w=e.weather||{};if(w.beaufort||w.vis||w.prec)o+='Weather: '+(w.beaufort||'')+(w.vis?' '+w.vis:'')+(w.prec?' '+w.prec:'')+(w.susp?' Susp:'+w.susp:'')+'\n';o+='Hold  Cargo           Dry   Wet   RH%   DP°C    Delta   Decision\n'+'-'.repeat(70)+'\n';e.holds.forEach((h,j)=>{if(!h.dry&&!h.cargo)return;o+=('H'+(j+1)+'.').padEnd(6)+(h.cargo||'—').substring(0,14).padEnd(16)+(h.dry||'—').padEnd(6)+(h.wet||'—').padEnd(6)+(h.rh||'—').padEnd(6)+(h.dp||'—').padEnd(8)+(h.delta||'—').padEnd(8)+(h.vent||'—')+'\n';});o+='\n';});dl(o,'text/plain','voyage_log_'+voy.name.replace(/\s/g,'_')+'.txt');}
+
+function loadXLSX(cb){if(window.XLSX){cb();return;}const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=cb;s.onerror=()=>{throw new Error('Could not load SheetJS');};document.head.appendChild(s);}
+function expCalcXLSX(){
+  loadXLSX(function(){
+    var s=snap();
+    var wb=XLSX.utils.book_new();
+    var aoa=[];
+    aoa.push(['MARINE CARGO VENTILATION LOG','','','','','','','','']);
+    aoa.push(['Vessel',s.vessel||'','','Voyage',s.voyage||'','','C/O',s.co||'','']);
+    aoa.push(['Date',s.obsDate,'','Time',s.obsTime||'','','Position',s.pos||'','']);
+    aoa.push(['','','','','','','','','']);
+    aoa.push(['OUTSIDE AIR CONDITIONS','','','','','','','','']);
+    aoa.push(['Dry Bulb (C)','Wet Bulb (C)','Dew Point (C)','Rel. Humidity (%)','','','','','']);
+    aoa.push([s.outDry||'',s.outWet||'',s.outDP||'',s.outRH||'','','','','','']);
+    aoa.push(['','','','','','','','','']);
+    aoa.push(['HOLD CONDITIONS','','','','','','','','']);
+    aoa.push(['Hold','Cargo','Dry (C)','Wet (C)','RH (%)','Dew Point (C)','Delta (C)','Decision','Notes']);
+    s.rows.forEach(function(r){
+      if(!r.dry && !r.cargo) return;
+      aoa.push([r.hold,r.cargo||'',r.dry||'',r.wet||'',r.rh||'',r.dp||'',r.delta||'',r.vent,r.notes]);
+    });
+    aoa.push(['']);
+    var vt=s.rows.filter(function(r){return r.vent.includes('Ventilate');}).length;
+    var nv=s.rows.filter(function(r){return r.vent.includes('No Vent');}).length;
+    var ca=s.rows.filter(function(r){return r.vent.includes('Monitor')||r.vent.includes('Hi RH');}).length;
+    aoa.push(['SUMMARY','','','','','','','','']);
+    aoa.push(['Ventilate',vt,'','No Vent',nv,'','Caution',ca,'']);
+    aoa.push(['Dew Point Rule: Ventilate when outside DP is lower than hold DP','','','','','','','','']);
+    var ws=XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols']=[{wch:18},{wch:20},{wch:12},{wch:12},{wch:10},{wch:16},{wch:14},{wch:26},{wch:22}];
+    // Colour-code decision column
+    var decRowStart=9;
+    for(var i=decRowStart;i<decRowStart+s.rows.length;i++){
+      var ref=XLSX.utils.encode_cell({r:i,c:7});
+      if(!ws[ref]) continue;
+      var v=String(ws[ref].v||'');
+      var rgb='888888';
+      if(v.indexOf('Ventilate')>=0) rgb='22C55E';
+      else if(v.indexOf('No Vent')>=0) rgb='E84040';
+      else if(v.indexOf('Monitor')>=0||v.indexOf('Hi RH')>=0) rgb='F0A500';
+      ws[ref].s={font:{bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb}},alignment:{horizontal:'center'}};
+    }
+    XLSX.utils.book_append_sheet(wb,ws,'Hold Conditions');
+    XLSX.writeFile(wb,'ventilation_log_'+s.now.toISOString().slice(0,10)+'.xlsx');
+  });
+}
+
+function expLogXLSX(){
+  loadXLSX(function(){
+    var voy=getCurrentVoy();
+    if(!voy){showToast('No voyage selected','var(--amber)');return;}
+    var wb=XLSX.utils.book_new();
+    // Summary sheet
+    var sumAoa=[];
+    sumAoa.push(['VOYAGE VENTILATION LOG: '+voy.name]);
+    sumAoa.push(['Vessel',voy.vessel||'','From',voy.from||'','To',voy.to||'']);
+    sumAoa.push(['Total Entries',voy.entries.length]);
+    sumAoa.push(['']);
+    sumAoa.push(['Entry','Date / Time','C/O','Position','Outside DP','Vent Holds','No-Vent Holds','Weather']);
+    voy.entries.forEach(function(e,i){
+      var vC=e.holds.filter(function(h){return h.vent&&h.vent.indexOf('Ventilate')>=0;}).length;
+      var nC=e.holds.filter(function(h){return h.vent&&h.vent.indexOf('No Vent')>=0;}).length;
+      var w=e.weather||{};
+      var wStr=(w.beaufort||'')+(w.vis?' - '+w.vis:'')+(w.prec?' - '+w.prec:'');
+      sumAoa.push([i+1,e.ts,e.co,e.pos||'',e.outDP||'',vC,nC,wStr]);
+    });
+    var sumWs=XLSX.utils.aoa_to_sheet(sumAoa);
+    sumWs['!cols']=[{wch:7},{wch:20},{wch:14},{wch:14},{wch:12},{wch:12},{wch:14},{wch:28}];
+    XLSX.utils.book_append_sheet(wb,sumWs,'Summary');
+    // Detail sheet
+    var detAoa=[];
+    detAoa.push(['HOLD DETAIL LOG: '+voy.name]);
+    detAoa.push(['']);
+    detAoa.push(['Entry','Timestamp','Out Dry','Out Wet','Out DP','Out RH','Beaufort','Visibility','Precip','Suspended','Hold','Cargo','Dry (C)','Wet (C)','RH (%)','DP (C)','Delta (C)','Decision']);
+    voy.entries.forEach(function(e,ei){
+      var w=e.weather||{};
+      var filledHolds=e.holds.filter(function(h){return h.dry||h.cargo;});
+      if(!filledHolds.length){
+        detAoa.push([ei+1,e.ts,e.outDry||'',e.outWet||'',e.outDP||'',e.outRH||'',w.beaufort||'',w.vis||'',w.prec||'',w.susp||'','','No data','','','','','','']);
+        return;
+      }
+      e.holds.forEach(function(h,hi){
+        if(!h.dry&&!h.cargo) return;
+        detAoa.push([
+          hi===0?ei+1:'', hi===0?e.ts:'',
+          hi===0?e.outDry||'':'', hi===0?e.outWet||'':'', hi===0?e.outDP||'':'', hi===0?e.outRH||'':'',
+          hi===0?w.beaufort||'':'', hi===0?w.vis||'':'', hi===0?w.prec||'':'', hi===0?w.susp||'':'',
+          'H'+(hi+1),h.cargo||'',h.dry||'',h.wet||'',h.rh||'',h.dp||'',h.delta||'',h.vent||''
+        ]);
+      });
+      detAoa.push(['']);
+    });
+    var detWs=XLSX.utils.aoa_to_sheet(detAoa);
+    detWs['!cols']=[{wch:7},{wch:18},{wch:9},{wch:9},{wch:9},{wch:8},{wch:14},{wch:14},{wch:12},{wch:18},{wch:6},{wch:16},{wch:9},{wch:9},{wch:8},{wch:10},{wch:10},{wch:24}];
+    // Colour decision column in detail sheet (col index 17)
+    for(var ri=3;ri<detAoa.length;ri++){
+      var row=detAoa[ri];
+      if(!row||!row[17]) continue;
+      var dv=String(row[17]);
+      var dRef=XLSX.utils.encode_cell({r:ri,c:17});
+      if(!detWs[dRef]) continue;
+      var dRgb='888888';
+      if(dv.indexOf('Ventilate')>=0) dRgb='22C55E';
+      else if(dv.indexOf('No Vent')>=0) dRgb='E84040';
+      else if(dv.indexOf('Monitor')>=0||dv.indexOf('Hi RH')>=0) dRgb='F0A500';
+      detWs[dRef].s={font:{bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:dRgb}},alignment:{horizontal:'center'}};
+    }
+    XLSX.utils.book_append_sheet(wb,detWs,'Hold Detail');
+    XLSX.writeFile(wb,'voyage_log_'+voy.name.replace(/\s/g,'_')+'.xlsx');
+  });
+}
+
+function loadPDF(cb){
+  if(window.jspdf&&window.jspdf.jsPDF){cb(window.jspdf.jsPDF);return;}
+  if(window.jsPDF){cb(window.jsPDF);return;}
+  var urls=[
+    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+    'https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js'
+  ];
+  var tried=0;
+  function tryLoad(){
+    if(tried>=urls.length){throw new Error('Could not load jsPDF — check internet connection');}
+    var s=document.createElement('script');
+    s.src=urls[tried++];
+    s.onload=function(){
+      var J=window.jspdf&&window.jspdf.jsPDF?window.jspdf.jsPDF:window.jsPDF;
+      if(!J){tryLoad();return;}
+      cb(J);
+    };
+    s.onerror=function(){tryLoad();};
+    document.head.appendChild(s);
+  }
+  tryLoad();
+}
+function expCalcPDF(){
+  loadPDF(function(jsPDF){
+    var s=snap();
+    var doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    var PW=277,PH=190;
+    var C={navy:[8,22,50],navyMid:[18,42,90],teal:[0,168,136],white:[255,255,255],
+           light:[245,248,252],mid:[220,230,242],txt:[30,50,80],txt2:[100,120,150],
+           green:[22,160,80],greenBg:[232,252,240],greenBd:[100,210,140],
+           red:[200,40,40],redBg:[252,232,232],redBd:[220,120,120],
+           amber:[180,110,0],amberBg:[252,244,220],amberBd:[220,180,80]};
+
+    // Page background
+    doc.setFillColor(248,250,253); doc.rect(0,0,PW,PH,'F');
+
+    // Header bar
+    doc.setFillColor(C.navy[0],C.navy[1],C.navy[2]); doc.rect(0,0,PW,28,'F');
+    doc.setTextColor(C.teal[0],C.teal[1],C.teal[2]);
+    doc.setFontSize(7); doc.setFont('helvetica','bold');
+    doc.text('MARINE CARGO VENTILATION LOG',12,9);
+    doc.setTextColor(C.white[0],C.white[1],C.white[2]);
+    doc.setFontSize(13); doc.setFont('helvetica','bold');
+    doc.text((s.vessel||'Vessel')+' \u00b7 Voyage '+(s.voyage||'\u2014'),12,19);
+    doc.setFontSize(6.5); doc.setFont('helvetica','normal');
+    doc.setTextColor(150,170,210);
+    doc.text('C/O: '+(s.co||'\u2014')+'   Date: '+s.obsDate+'   Time: '+(s.obsTime||'\u2014')+'   Position: '+(s.pos||'\u2014'),12,25.5);
+    doc.text('Dew Point Rule: Ventilate only when Outside DP \u2264 Hold DP',PW-12,25.5,{align:'right'});
+
+    // Outside air panel
+    var y=33;
+    doc.setFillColor(C.white[0],C.white[1],C.white[2]);
+    doc.setDrawColor(C.mid[0],C.mid[1],C.mid[2]);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(10,y,PW-20,17,2,2,'FD');
+    // Teal left bar
+    doc.setFillColor(C.teal[0],C.teal[1],C.teal[2]);
+    doc.roundedRect(10,y,3,17,1,1,'F');
+    doc.setTextColor(C.teal[0],C.teal[1],C.teal[2]);
+    doc.setFontSize(7); doc.setFont('helvetica','bold');
+    doc.text('OUTSIDE AIR',17,y+7);
+    var outF=[['Dry Bulb',(s.outDry||'\u2014')+'\u00b0C'],['Wet Bulb',(s.outWet||'\u2014')+'\u00b0C'],['Dew Point',(s.outDP||'\u2014')+'\u00b0C'],['Humidity',(s.outRH||'\u2014')+'%']];
+    outF.forEach(function(item,i){
+      var ox=52+i*52;
+      doc.setFontSize(6); doc.setFont('helvetica','normal'); doc.setTextColor(C.txt2[0],C.txt2[1],C.txt2[2]);
+      doc.text(item[0],ox,y+6.5);
+      doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(C.txt[0],C.txt[1],C.txt[2]);
+      doc.text(item[1],ox,y+14);
+    });
+
+    // Table
+    y=55;
+    var filledRows=s.rows.filter(function(r){return r.dry||r.cargo;});
+    var CH=8.5;
+    // Column definitions: label, width, align
+    var COLS=[
+      {l:'Hold',w:16,a:'left'},
+      {l:'Cargo',w:36,a:'left'},
+      {l:'Dry \u00b0C',w:16,a:'center'},
+      {l:'Wet \u00b0C',w:16,a:'center'},
+      {l:'RH %',w:14,a:'center'},
+      {l:'Dew Point \u00b0C',w:22,a:'center'},
+      {l:'DP Delta',w:20,a:'center'},
+      {l:'Ventilation Decision',w:0,a:'center'} // fills rest
+    ];
+    // Calculate last col width
+    var usedW=0; COLS.slice(0,7).forEach(function(c){usedW+=c.w;});
+    COLS[7].w=PW-20-usedW-6;
+
+    // Table header
+    doc.setFillColor(C.navyMid[0],C.navyMid[1],C.navyMid[2]);
+    doc.rect(10,y,PW-20,CH,'F');
+    doc.setTextColor(C.white[0],C.white[1],C.white[2]);
+    doc.setFontSize(7); doc.setFont('helvetica','bold');
+    var cx=13;
+    COLS.forEach(function(col){
+      if(col.a==='center') doc.text(col.l,cx+col.w/2,y+CH/2+2.5,{align:'center'});
+      else doc.text(col.l,cx,y+CH/2+2.5);
+      cx+=col.w;
+    });
+    y+=CH;
+
+    // Data rows
+    filledRows.forEach(function(r,ri){
+      var rowBg=(ri%2===0)?[248,250,253]:[255,255,255];
+      doc.setFillColor(rowBg[0],rowBg[1],rowBg[2]);
+      doc.rect(10,y,PW-20,CH,'F');
+      // Bottom border
+      doc.setDrawColor(C.mid[0],C.mid[1],C.mid[2]); doc.setLineWidth(0.2);
+      doc.line(10,y+CH,PW-10,y+CH);
+
+      // Decision badge — SOLID fill, no border-only
+      var dX=13; COLS.slice(0,7).forEach(function(c){dX+=c.w;});
+      var decW=COLS[7].w;
+      var ventLabel=r.vent||'';
+      // Clean up label
+      ventLabel=ventLabel.replace('Ventilate','VENTILATE').replace('No Vent\u00b7HiRH','NO VENT').replace('No Vent','NO VENT').replace('Monitor','MONITOR');
+      var hV=r.vent.indexOf('Ventilate')>=0;
+      var hN=r.vent.indexOf('No Vent')>=0||r.vent.indexOf('HiRH')>=0;
+      var hC=r.vent.indexOf('Monitor')>=0||r.vent.indexOf('Caution')>=0;
+      if(r.dry){
+        var bgFill,ftColor;
+        if(hV){bgFill=[22,160,80];ftColor=[255,255,255];}
+        else if(hN){bgFill=[200,40,40];ftColor=[255,255,255];}
+        else if(hC){bgFill=[180,110,0];ftColor=[255,255,255];}
+        else{bgFill=[140,155,175];ftColor=[255,255,255];}
+        doc.setFillColor(bgFill[0],bgFill[1],bgFill[2]);
+        doc.roundedRect(dX+1,y+1.5,decW-2,CH-3,1.5,1.5,'F');
+        doc.setTextColor(ftColor[0],ftColor[1],ftColor[2]);
+        doc.setFont('helvetica','bold'); doc.setFontSize(6.5);
+        doc.text(ventLabel,dX+decW/2,y+CH/2+2.5,{align:'center'});
+      }
+
+      // Cell data
+      cx=13;
+      var cells=[
+        {v:r.hold,c:C.teal,bold:true},
+        {v:r.cargo||'\u2014',c:C.txt,bold:false},
+        {v:r.dry||'\u2014',c:C.txt,bold:false},
+        {v:r.wet||'\u2014',c:C.txt,bold:false},
+        {v:r.rh?r.rh+'%':'\u2014',c:C.txt,bold:false},
+        {v:r.dp?r.dp+'\u00b0C':'\u2014',c:C.txt,bold:false},
+        {v:r.delta||'\u2014',c:r.delta&&parseFloat(r.delta)>0?C.green:r.delta&&parseFloat(r.delta)<0?C.red:C.txt,bold:true}
+      ];
+      cells.forEach(function(cell,ci){
+        var col=COLS[ci];
+        doc.setFont('helvetica',cell.bold?'bold':'normal');
+        doc.setTextColor(cell.c[0],cell.c[1],cell.c[2]);
+        doc.setFontSize(7);
+        var tx=col.a==='center'?cx+col.w/2:cx;
+        var ta=col.a==='center'?{align:'center'}:{};
+        doc.text(String(cell.v).substring(0,18),tx,y+CH/2+2.5,ta);
+        cx+=col.w;
+      });
+      y+=CH;
+    });
+
+    // Summary footer boxes
+    var fy=y+5;
+    var vt=filledRows.filter(function(r){return r.vent.indexOf('Ventilate')>=0;}).length;
+    var nv=filledRows.filter(function(r){return r.vent.indexOf('No Vent')>=0||r.vent.indexOf('HiRH')>=0;}).length;
+    var ca=filledRows.length-vt-nv;
+    [['VENTILATE',vt,[22,160,80]],['NO VENT',nv,[200,40,40]],['CAUTION',ca,[180,110,0]]].forEach(function(b,i){
+      var bx=10+i*65;
+      doc.setFillColor(b[2][0],b[2][1],b[2][2]);
+      doc.roundedRect(bx,fy,60,11,2,2,'F');
+      doc.setTextColor(255,255,255);
+      doc.setFontSize(6.5); doc.setFont('helvetica','bold');
+      doc.text(b[0]+': '+b[1],bx+30,fy+7.5,{align:'center'});
+    });
+
+    // Footer line
+    doc.setTextColor(C.txt2[0],C.txt2[1],C.txt2[2]);
+    doc.setFontSize(6); doc.setFont('helvetica','normal');
+    doc.text('Marine Cargo Ventilation Log \u00b7 Generated: '+s.now.toLocaleString(),PW/2,PH-4,{align:'center'});
+    doc.save('ventilation_log_'+s.now.toISOString().slice(0,10)+'.pdf');
+  });
+}
+
+function expLogPDF(){
+  loadPDF(function(jsPDF){
+    var voy=getCurrentVoy();
+    if(!voy){showToast('No voyage selected');return;}
+    var doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    var PW=277,PH=190;
+    var pageNum=1;
+    var C={navy:[8,22,50],navyMid:[18,42,90],teal:[0,168,136],white:[255,255,255],
+           pageBg:[248,250,253],light:[245,248,252],mid:[215,228,242],
+           txt:[30,50,80],txt2:[100,120,150],
+           green:[22,160,80],red:[200,40,40],amber:[180,110,0]};
+
+    function drawPageHdr(){
+      doc.setFillColor(C.pageBg[0],C.pageBg[1],C.pageBg[2]); doc.rect(0,0,PW,PH,'F');
+      doc.setFillColor(C.navy[0],C.navy[1],C.navy[2]); doc.rect(0,0,PW,26,'F');
+      doc.setTextColor(C.teal[0],C.teal[1],C.teal[2]);
+      doc.setFontSize(7); doc.setFont('helvetica','bold');
+      doc.text('VOYAGE VENTILATION LOG',12,9);
+      doc.setTextColor(C.white[0],C.white[1],C.white[2]);
+      doc.setFontSize(13); doc.setFont('helvetica','bold');
+      doc.text(voy.name+(voy.vessel?' \u00b7 '+voy.vessel:''),12,20);
+      doc.setTextColor(150,170,210); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
+      doc.text(voy.entries.length+' entries \u00b7 Page '+pageNum,PW-12,20,{align:'right'});
+      doc.text('Ventilate only when Outside DP \u2264 Hold DP',PW-12,25,{align:'right'});
+    }
+
+    drawPageHdr();
+    var y=30;
+
+    if(!voy.entries.length){
+      doc.setTextColor(C.txt2[0],C.txt2[1],C.txt2[2]); doc.setFontSize(11);
+      doc.text('No entries in this voyage.',PW/2,PH/2,{align:'center'});
+      doc.save('voyage_log_'+voy.name.replace(/\s/g,'_')+'.pdf'); return;
+    }
+
+    var CH=8;
+    var COLS=[
+      {l:'Hold',w:14,a:'left'},
+      {l:'Cargo',w:32,a:'left'},
+      {l:'Dry \u00b0C',w:16,a:'center'},
+      {l:'Wet \u00b0C',w:16,a:'center'},
+      {l:'RH %',w:13,a:'center'},
+      {l:'DP \u00b0C',w:16,a:'center'},
+      {l:'Delta',w:16,a:'center'},
+      {l:'Decision',w:0,a:'center'}
+    ];
+    var usedW=0; COLS.slice(0,7).forEach(function(c){usedW+=c.w;});
+    COLS[7].w=PW-20-usedW-6;
+
+    voy.entries.forEach(function(e,ei){
+      var filledH=e.holds.filter(function(h){return h.dry||h.cargo;});
+      // Estimate space needed: entry hdr(18) + outside panel(12) + col hdr(CH) + rows + gap(6)
+      var needed=18+12+CH+(filledH.length*CH)+8;
+      if(y+needed>PH-10){
+        doc.addPage(); pageNum++;
+        drawPageHdr(); y=30;
+      }
+
+      // ── Entry header block ──
+      doc.setFillColor(C.navyMid[0],C.navyMid[1],C.navyMid[2]);
+      doc.roundedRect(10,y,PW-20,11,2,2,'F');
+      doc.setTextColor(C.teal[0],C.teal[1],C.teal[2]);
+      doc.setFontSize(7.5); doc.setFont('helvetica','bold');
+      doc.text('ENTRY '+(ei+1),14,y+7.5);
+      doc.setTextColor(C.white[0],C.white[1],C.white[2]);
+      doc.setFont('helvetica','normal'); doc.setFontSize(8);
+      doc.text(e.ts,48,y+7.5);
+      var w=e.weather||{};
+      var wStr=(w.beaufort||'')+(w.vis?' \u00b7 '+w.vis:'')+(w.prec?' \u00b7 '+w.prec:'');
+      doc.setTextColor(180,200,230); doc.setFontSize(6.5);
+      if(wStr) doc.text(wStr,PW-14,y+7.5,{align:'right'});
+      y+=13;
+
+      // ── Outside air row ──
+      doc.setFillColor(C.white[0],C.white[1],C.white[2]);
+      doc.setDrawColor(C.mid[0],C.mid[1],C.mid[2]); doc.setLineWidth(0.3);
+      doc.roundedRect(10,y,PW-20,11,1,1,'FD');
+      doc.setFillColor(C.teal[0],C.teal[1],C.teal[2]);
+      doc.rect(10,y,3,11,'F');
+      var outItems=[
+        ['C/O',e.co||'\u2014'],
+        ['Position',e.pos||'\u2014'],
+        ['Dry',( e.outDry||'\u2014')+'\u00b0C'],
+        ['Wet',(e.outWet||'\u2014')+'\u00b0C'],
+        ['DP',(e.outDP||'\u2014')+'\u00b0C'],
+        ['RH',(e.outRH||'\u2014')+'%']
+      ];
+      var ox=15;
+      outItems.forEach(function(item,i){
+        doc.setFontSize(6); doc.setFont('helvetica','normal'); doc.setTextColor(C.txt2[0],C.txt2[1],C.txt2[2]);
+        doc.text(item[0],ox,y+4.5);
+        doc.setFontSize(7.5); doc.setFont('helvetica','bold'); doc.setTextColor(C.txt[0],C.txt[1],C.txt[2]);
+        doc.text(item[1],ox,y+9.5);
+        ox+=37;
+        // Divider
+        if(i<outItems.length-1){
+          doc.setDrawColor(C.mid[0],C.mid[1],C.mid[2]); doc.setLineWidth(0.2);
+          doc.line(ox-3,y+2,ox-3,y+9);
+        }
+      });
+      y+=13;
+
+      if(!filledH.length){
+        doc.setTextColor(C.txt2[0],C.txt2[1],C.txt2[2]); doc.setFontSize(7);
+        doc.text('No hold readings recorded.',14,y+5);
+        y+=10; return;
+      }
+
+      // ── Column header ──
+      doc.setFillColor(C.navyMid[0],C.navyMid[1],C.navyMid[2]);
+      doc.rect(10,y,PW-20,CH,'F');
+      doc.setTextColor(C.white[0],C.white[1],C.white[2]);
+      doc.setFontSize(6.5); doc.setFont('helvetica','bold');
+      var cx=13;
+      COLS.forEach(function(col){
+        if(col.a==='center') doc.text(col.l,cx+col.w/2,y+CH/2+2.5,{align:'center'});
+        else doc.text(col.l,cx,y+CH/2+2.5);
+        cx+=col.w;
+      });
+      y+=CH;
+
+      // ── Hold rows ──
+      doc.setFont('helvetica','normal');
+      filledH.forEach(function(h,hi){
+        if(y>PH-10){doc.addPage();pageNum++;drawPageHdr();y=30;}
+        var rowBg=(hi%2===0)?C.light:C.white;
+        doc.setFillColor(rowBg[0],rowBg[1],rowBg[2]);
+        doc.rect(10,y,PW-20,CH,'F');
+        doc.setDrawColor(C.mid[0],C.mid[1],C.mid[2]); doc.setLineWidth(0.15);
+        doc.line(10,y+CH,PW-10,y+CH);
+
+        var origIdx=e.holds.indexOf(h);
+        var hLabel='H'+(origIdx+1);
+
+        // Decision badge — SOLID colour fill
+        var dX=13; COLS.slice(0,7).forEach(function(col){dX+=col.w;});
+        var decW=COLS[7].w;
+        var ventLabel=h.vent||'';
+        ventLabel=ventLabel.replace('Ventilate','VENTILATE').replace('No Vent\u00b7HiRH','NO VENT \u00b7 Hi RH').replace('HiRH','Hi RH').replace('No Vent','NO VENT').replace('Monitor','MONITOR');
+        var hV=h.vent&&h.vent.indexOf('Ventilate')>=0;
+        var hN=h.vent&&(h.vent.indexOf('No Vent')>=0||h.vent.indexOf('HiRH')>=0);
+        var hC=h.vent&&(h.vent.indexOf('Monitor')>=0||h.vent.indexOf('Caution')>=0);
+
+        if(h.dry){
+          var bgFill,ftColor;
+          if(hV){bgFill=C.green;ftColor=C.white;}
+          else if(hN){bgFill=C.red;ftColor=C.white;}
+          else if(hC){bgFill=C.amber;ftColor=C.white;}
+          else{bgFill=[140,155,175];ftColor=C.white;}
+          doc.setFillColor(bgFill[0],bgFill[1],bgFill[2]);
+          doc.roundedRect(dX+1,y+1.2,decW-2,CH-2.4,1.5,1.5,'F');
+          doc.setTextColor(ftColor[0],ftColor[1],ftColor[2]);
+          doc.setFont('helvetica','bold'); doc.setFontSize(6.5);
+          doc.text(ventLabel,dX+decW/2,y+CH/2+2.5,{align:'center'});
+        }
+
+        // Delta colour — green positive, red negative
+        var deltaNum=h.delta?parseFloat(h.delta):null;
+        var deltaColor=deltaNum===null?C.txt:deltaNum>0?C.green:deltaNum<0?C.red:C.txt;
+
+        // Cell values
+        cx=13;
+        var cells=[
+          {v:hLabel,c:C.teal,bold:true,col:COLS[0]},
+          {v:h.cargo||'\u2014',c:C.txt,bold:false,col:COLS[1]},
+          {v:h.dry?h.dry+'\u00b0C':'\u2014',c:C.txt,bold:false,col:COLS[2]},
+          {v:h.wet?h.wet+'\u00b0C':'\u2014',c:C.txt,bold:false,col:COLS[3]},
+          {v:h.rh?h.rh+'%':'\u2014',c:h.rh&&parseInt(h.rh)>=60?C.red:C.txt,bold:h.rh&&parseInt(h.rh)>=60,col:COLS[4]},
+          {v:h.dp?h.dp+'\u00b0C':'\u2014',c:C.teal,bold:false,col:COLS[5]},
+          {v:h.delta||'\u2014',c:deltaColor,bold:true,col:COLS[6]}
+        ];
+        cells.forEach(function(cell){
+          var col=cell.col;
+          doc.setFont('helvetica',cell.bold?'bold':'normal');
+          doc.setTextColor(cell.c[0],cell.c[1],cell.c[2]);
+          doc.setFontSize(7);
+          var tx=col.a==='center'?cx+col.w/2:cx;
+          var ta=col.a==='center'?{align:'center'}:{};
+          doc.text(String(cell.v).substring(0,20),tx,y+CH/2+2.5,ta);
+          cx+=col.w;
+        });
+        y+=CH;
+      });
+      y+=6; // gap between entries
+    });
+
+    // Page footer
+    doc.setTextColor(C.txt2[0],C.txt2[1],C.txt2[2]);
+    doc.setFontSize(6); doc.setFont('helvetica','normal');
+    doc.text('Marine Cargo Ventilation Log \u00b7 DP Rule \u00b7 Generated: '+new Date().toLocaleString(),PW/2,PH-3,{align:'center'});
+    doc.save('voyage_log_'+voy.name.replace(/\s/g,'_')+'.pdf');
+  });
+}
+
+
+// ══ THEME ══
+function toggleTheme(){
+  var isLight=document.body.classList.toggle('light');
+  localStorage.setItem('vc_theme',isLight?'light':'dark');
+  var btn=document.getElementById('themeBtn');
+  if(btn){
+    btn.innerHTML=isLight
+      ?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>'
+      :'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+  }
+  if(document.getElementById('trendChart')) drawChart();
+}
+function applyTheme(){
+  var saved=localStorage.getItem('vc_theme');
+  if(saved==='light'){
+    document.body.classList.add('light');
+    var btn=document.getElementById('themeBtn');
+    if(btn) btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+  }
+}
+
+// ══ SETTINGS FUNCTIONS ══
+function updStorageInfo(){
+  try{
+    var total=0;
+    for(var k in localStorage){if(localStorage.hasOwnProperty(k))total+=((localStorage[k].length+k.length)*2);}
+    var el=document.getElementById('storageSize');
+    var el2=document.getElementById('storageInfo');
+    if(el) el.textContent=Math.round(total/1024*10)/10+'KB';
+    if(el2) el2.textContent='Used by VentCalc (5MB limit)';
+  }catch(e){}
+}
+function clearCalcData(){
+  if(!confirm('Clear all calculator hold data?')) return;
+  hd=Array(HOLDS).fill(null).map(function(){return{dry:'',wet:'',cargo:'',notes:''};});
+  ['odry','owet','cv','cvoy','cco','cpos'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var dp=document.getElementById('odp');if(dp)dp.textContent='—';
+  var rh=document.getElementById('orh');if(rh)rh.textContent='—';
+  buildTbl();updSum();updRisk();saveLocal();showToast('Calculator cleared');
+}
+function clearAllVoyages(){
+  if(!confirm('Delete ALL voyages and log entries? This cannot be undone.')) return;
+  voyages=[];currentVoyId=null;
+  renderVoyList();rebuildVoySelect();renderEntries();updLogStats();saveLocal();
+  showToast('All voyages cleared');
+}
+function resetApp(){
+  if(!confirm('Reset everything? All data will be permanently deleted.')) return;
+  try{localStorage.clear();}catch(e){}
+  location.reload();
+}
+
+// ══════════════════════════════════════════════
+// ══ PWA ══
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById('installBtn');
+  if(btn) btn.style.display = 'inline-flex';
+});
+function installApp(){
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(function(){
+    deferredPrompt = null;
+    const btn = document.getElementById('installBtn');
+    if(btn) btn.style.display = 'none';
+  });
+}
+window.addEventListener('appinstalled', function(){
+  showToast('App installed successfully');
+  const btn = document.getElementById('installBtn');
+  if(btn) btn.style.display = 'none';
+});
+
+// Register external Service Worker
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js')
+    .then(function(reg){
+      console.log('VentCalc SW registered, scope:', reg.scope);
+    })
+    .catch(function(err){
+      console.warn('SW registration failed:', err);
+    });
+}
+
+// ══ ALIAS (backward compat) ══
+function renderLog(){ renderEntries(); }
+
+// INIT
+// ══════════════════════════════════════════════
+applyTheme(); buildTbl(); updSum(); updRisk(); renderQuiz();
+(()=>{const n=new Date();const p=v=>String(v).padStart(2,'0');document.getElementById('cdate').value=n.getFullYear()+'-'+p(n.getMonth()+1)+'-'+p(n.getDate());document.getElementById('ctime').value=p(n.getHours())+':'+p(n.getMinutes());})();
+loadLocal();
+</script>
+</body>
+</html>
