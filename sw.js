@@ -3,7 +3,7 @@
 // Full offline support with cache-first strategy
 // ═══════════════════════════════════════════════════════
 
-const CACHE_NAME = 'ventcalc-v1.0.0';
+const CACHE_NAME = 'ventcalc-v3.0.0';
 
 // All assets to cache on install
 const PRECACHE_ASSETS = [

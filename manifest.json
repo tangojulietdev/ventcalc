@@ -1,13 +1,13 @@
 {
-  "name": "VentCalc — Marine Ventilation Guide",
+  "name": "VentCalc — Marine Ventilation Log",
   "short_name": "VentCalc",
-  "description": "Professional marine cargo hold ventilation dew point calculator and voyage log for Chief Officers. Works fully offline.",
+  "description": "Dew point calculations, voyage logs, and ventilation decision support for Chief Officers. Works fully offline.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#07101f",
-  "theme_color": "#07101f",
+  "background_color": "#f4f6f8",
+  "theme_color": "#0f9488",
   "categories": ["utilities", "productivity"],
   "lang": "en",
   "icons": [
